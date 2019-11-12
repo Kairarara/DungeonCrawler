@@ -1,22 +1,133 @@
-.App {
-  text-align: center;
+/*
+  http://www.videogamesprites.net/FinalFantasyTactics/Party/
+*/
+
+html{
+  height:100%;
+  width:100%;
 }
 
-.App-logo {
-  height: 40vmin;
+body {
+  height:100%;
+  width:100%;
+  margin:0;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+#root{
+  height:100%;
+  width:100%;
 }
 
-.App-link {
-  color: #09d3ac;
+.app{
+  height:100%;
+  width:100%;
+  background:gray;
 }
+
+.playerInfo{
+  height:45%;
+  background:pink;
+  width:15%;
+  position:absolute;
+  z-index:2;
+  top:20px;
+  left:20px;
+}
+
+.playerPic{
+  
+}
+
+.playerBars{
+  
+}
+
+.playerStats{
+  
+}
+
+.enemyInfo{
+  height:45%;
+  background:blue;
+  width:15%;
+  position:absolute;
+  z-index:2;
+  top:500px;
+  left:20px;
+}
+
+.enemyPic{
+  
+}
+
+.enemyBars{
+  
+}
+
+.bar { 
+	height: 20px;  /* Can be anything */
+	position: relative;
+	background: #555;
+	padding: 2%;
+	box-shadow: inset 0 -5px 5px rgba(255,255,255,0.3);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  box-shadow: 
+    inset 0 2px 9px  rgba(255,255,255,0.3),
+    inset 0 -2px 6px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.playerHealth span{
+  background-color: #2bc253;
+}
+
+.enemyHealth span{
+  background-color: #e33922;
+}
+
+
+.gameBoard{
+  height:100%;
+  background:green;
+  width:100%;
+  position:absolute;
+  top:0px;
+  z-index:1;
+  display:grid;
+}
+
+.square{
+  width:50px;
+  height:50px;
+  margin:1px;
+}
+
+/*
+    <div id="root">
+      <div class="app">
+        <div class="playerDiv">
+          <img class="playerPic"/>
+          <div class="playerInfo">
+            <div class="bars">
+              
+            </div>
+            <div class="stats">
+              
+            </div>
+          </div>
+        </div>
+        <div class="gameMap">
+          
+        </div>
+        <div class="enemyDiv">
+          
+        </div>
+      </div>
+    </div>
+*/
