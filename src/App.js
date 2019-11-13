@@ -2,19 +2,11 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-function logMap(map){
-  for(let i=0;i<map.length;i++){
-    console.log(map[i])
-  }
-}
 
 let mapLength=10;
 let mapWidth=20;
 
-
-
-
-let createLand=(mapL=10, mapW=10)=>{
+let createLand=(mapL=20, mapW=30)=>{
   let map=[];
   for(let i=0; i<mapL; i++){
     map.push(new Array(mapW).fill(0))
@@ -122,23 +114,29 @@ class Map extends React.Component{
   constructor(props){
     super(props);
     this.state={
-      map:createLand()
+      map:createLand(),
+	  types:["grass","rock","ground"],
+	  squareSize:40
     }
   }
   
   render(){
     let map=this.state.map;
     let squares=[];
+	let squareStyle={
+	  height:this.state.squareSize+"px",
+	  width:this.state.squareSize+"px"
+	}
     for(let i=0;i<map.length;i++){
       for(let j=0;j<map[i].length;j++){
-        squares.push(<Square type={map[i][j]}/>)
+        squares.push(<Square type={this.state.types[map[i][j]]} style={squareStyle}/>)
       }
     }
-    let style={
-      gridTemplateColumns: "repeat("+map[0].length+", 52px)"
+    let mapStyle={
+      gridTemplateColumns: "repeat("+map[0].length+", "+(this.state.squareSize+2)+"px)"
     };
     return(
-      <div className="gameBoard" style={style}>
+      <div className="gameBoard" style={mapStyle}>
         {squares}
       </div>
     )
@@ -156,16 +154,22 @@ class Square extends React.Component{
   render(){
     let color;
     switch(this.state.type){
-      case "earth":
-        color="#112233"
+      case "ground":
+        color="#9c7711"
         break;
       case "grass":
         color="#7ec850"
         break;
+      case "rock":
+        color="#5c4e29"
+        break;
       default:
         color="#000000"
     }
-    let style={
+    let style=this.props.style;
+	
+    style={
+	  height:this.props.style.height,
       background:color
     }
     
