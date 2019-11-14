@@ -21,7 +21,8 @@ body {
 .app{
   height:100%;
   width:100%;
-  background:gray;
+  background:#383838;
+	padding:auto;
 }
 
 .playerInfo{
@@ -93,13 +94,11 @@ body {
 
 
 .gameBoard{
-  height:100%;
-  background:green;
-  width:100%;
-  position:absolute;
-  top:0px;
-  z-index:1;
+	margin:auto;
+	height:462px;
+	width:462px;
   display:grid;
+	overflow:hidden;
 }
 
 .square{

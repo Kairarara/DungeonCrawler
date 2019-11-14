@@ -2,18 +2,14 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-
-let mapLength=10;
-let mapWidth=20;
-
-let createLand=(mapL=20, mapW=30)=>{
+let createLand=(mapH=10, mapW=30)=>{
   let map=[];
-  for(let i=0; i<mapL; i++){
+  for(let i=0; i<mapH; i++){
     map.push(new Array(mapW).fill(0))
   }
   
   function wall(i,j,chance){
-    if(i<0 || j<0 || i>=mapL || j>=mapW) return 0;
+    if(i<0 || j<0 || i>=mapH || j>=mapW) return 0;
     if(map[i][j]===0){
       if(Math.floor(Math.random() * chance)<10){
         map[i][j]=1;
@@ -35,7 +31,7 @@ let createLand=(mapL=20, mapW=30)=>{
       growWall(i,j+1,chance+mod);
   }
 
-  for(let i=0;i<mapL;i++){
+  for(let i=0;i<mapH;i++){
     for(let j=0;j<mapW;j++){
       if(Math.floor(Math.random() * 40)===0){
         map[i][j]=1;
@@ -50,9 +46,9 @@ let createLand=(mapL=20, mapW=30)=>{
 
 
 
-let createDungeon=(mapL=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
+let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
   let map=[];
-  for(let i=0; i<mapL; i++){
+  for(let i=0; i<mapH; i++){
     map.push(new Array(mapW).fill(0))
   }
   
@@ -84,7 +80,7 @@ let createDungeon=(mapL=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
       }
     }
   }
-  let startL=mapL/2-1;
+  let startL=mapH/2-1;
   let startW=mapW/2-1;
   map[startL][startW]=1;
   createTunnel(startL, startW, maxL, turns);
@@ -104,7 +100,7 @@ class App extends React.Component{
     
     return(
       <div className="app">
-        <Map/>
+        <Map mapW={20} mapH={20}/>
       </div>
     )
   }
@@ -113,30 +109,110 @@ class App extends React.Component{
 class Map extends React.Component{
   constructor(props){
     super(props);
+		
+		
+		let playerX=Math.floor(this.props.mapW/2);
+		let playerY=Math.floor(this.props.mapH/2);
+		const viewRange=4;
+		
+		let borders={			//borders indicate the last visible squares, and are included in the visible map
+			left:(playerX<viewRange)?0:(playerX-viewRange),
+			top:(playerY<viewRange)?0:(playerY-viewRange)
+		}
+		
+		borders.right=borders.left+viewRange*2;
+		borders.bottom=borders.top+viewRange*2;
+		
+		if(borders.right>this.props.mapW-1) borders.right=this.props.mapW-1;
+		if(borders.bottom>this.props.mapH-1) borders.bottom=this.props.mapH-1;
+		
+		let map=createLand(this.props.mapH, this.props.mapW);
+		let shownMap=[]
+		for(let i=borders.top;i<=borders.bottom;i++){
+			shownMap.push(map[i].slice(borders.left,borders.right+1))
+		}
+		
     this.state={
-      map:createLand(),
-	  types:["grass","rock","ground"],
-	  squareSize:40
+      map:map,
+			shownMap:shownMap,
+			types:["grass","rock","ground"],
+			squareSize:40,
+			viewRange:viewRange,
+			playerX:playerX,
+			playerY:playerY
     }
   }
+	
+	handleKeyPress=(e)=>{
+		let newX=this.state.playerX;
+		let newY=this.state.playerY;
+		switch(e.key){
+			case 'ArrowLeft':
+				newX--;
+				break;
+			case 'ArrowUp':
+				newY--;
+				break;
+			case 'ArrowRight':
+				newX++;
+				break;
+			case 'ArrowDown':
+				newY++;
+				break;
+			default:
+				return 0;
+		}
+		
+		const viewRange=this.state.viewRange;
+		
+		let borders={			//borders indicate the last visible squares, and are included in the visible map
+			left:(newX<viewRange)?0:(newX-viewRange),
+			top:(newY<viewRange)?0:(newY-viewRange)
+		}
+		
+		borders.right=borders.left+viewRange*2;
+		borders.bottom=borders.top+viewRange*2;
+		
+		if(borders.right>this.props.mapW-1) borders.right=this.props.mapW-1;
+		if(borders.bottom>this.props.mapH-1) borders.bottom=this.props.mapH-1;
+		
+		let map=this.state.map;
+		let shownMap=[]
+		for(let i=borders.top;i<=borders.bottom;i++){
+			shownMap.push(map[i].slice(borders.left,borders.right+1))
+		}
+		
+		this.setState({
+			playerX:newX,
+			playerY:newY,
+			shownMap:shownMap
+		},()=>{
+			console.log(this.state.shownMap);
+			this.forceUpdate();
+			})
+	}
   
   render(){
-    let map=this.state.map;
+		let shownMap=this.state.shownMap;
+    //let map=this.state.map;
     let squares=[];
-	let squareStyle={
-	  height:this.state.squareSize+"px",
-	  width:this.state.squareSize+"px"
-	}
-    for(let i=0;i<map.length;i++){
-      for(let j=0;j<map[i].length;j++){
-        squares.push(<Square type={this.state.types[map[i][j]]} style={squareStyle}/>)
+		let squareStyle={
+			height:this.state.squareSize+"px",
+			width:this.state.squareSize+"px"
+		}
+    for(let i=0;i<shownMap.length;i++){
+      for(let j=0;j<shownMap[i].length;j++){
+        squares.push(<Square type={this.state.types[shownMap[i][j]]} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
-      gridTemplateColumns: "repeat("+map[0].length+", "+(this.state.squareSize+2)+"px)"
+      gridTemplateColumns: "repeat("+shownMap[0].length+", "+(this.state.squareSize+2)+"px)",
+			width:(shownMap[0].length*(this.state.squareSize+2))+"px",
+			height:(shownMap.length*(this.state.squareSize+2))+"px"
     };
+		
     return(
-      <div className="gameBoard" style={mapStyle}>
+      <div className="gameBoard" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyPress}>
         {squares}
       </div>
     )
@@ -151,6 +227,10 @@ class Square extends React.Component{
     };
   }
   
+	componentWillReceiveProps(nextProps) {
+		this.setState({ type: nextProps.type });  
+	}
+	
   render(){
     let color;
     switch(this.state.type){
