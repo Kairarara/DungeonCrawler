@@ -2,21 +2,28 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+/*terrain types are:
+	-grass
+	-ground
+	-rock
+	-player
+*/
+
 let createLand=(mapH=10, mapW=30)=>{
   let map=[];
   for(let i=0; i<mapH; i++){
-    map.push(new Array(mapW).fill(0))
+    map.push(new Array(mapW).fill("grass"))
   }
   
   function wall(i,j,chance){
     if(i<0 || j<0 || i>=mapH || j>=mapW) return 0;
-    if(map[i][j]===0){
+    if(map[i][j]==="grass"){
       if(Math.floor(Math.random() * chance)<10){
-        map[i][j]=1;
-        return 1;
+        map[i][j]="rock";
+        return true;
       }
     }
-    return 0;
+    return false;
   }
 
   function growWall(i,j,chance=10){
@@ -34,7 +41,7 @@ let createLand=(mapH=10, mapW=30)=>{
   for(let i=0;i<mapH;i++){
     for(let j=0;j<mapW;j++){
       if(Math.floor(Math.random() * 40)===0){
-        map[i][j]=1;
+        map[i][j]="rock";
         growWall(i,j)
       }
     }
@@ -49,7 +56,7 @@ let createLand=(mapH=10, mapW=30)=>{
 let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
   let map=[];
   for(let i=0; i<mapH; i++){
-    map.push(new Array(mapW).fill(0))
+    map.push(new Array(mapW).fill("rock"))
   }
   
   
@@ -76,7 +83,7 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
       for(let i=0;i<length;i++){
         l+=y;
         w+=x;
-        map[l][w]=1;
+        map[l][w]="ground";
       }
     }
   }
@@ -117,25 +124,23 @@ class Map extends React.Component{
 		
 		let borders={			//borders indicate the last visible squares, and are included in the visible map
 			left:(playerX<viewRange)?0:(playerX-viewRange),
-			top:(playerY<viewRange)?0:(playerY-viewRange)
+			top:(playerY<viewRange)?0:(playerY-viewRange),
+			right:(playerX>(this.props.mapW-viewRange-1))?this.props.mapW-1:(playerX+viewRange),
+			bottom:(playerY>(this.props.mapH-viewRange-1))?this.props.mapH-1:(playerY+viewRange)
 		}
 		
-		borders.right=borders.left+viewRange*2;
-		borders.bottom=borders.top+viewRange*2;
-		
-		if(borders.right>this.props.mapW-1) borders.right=this.props.mapW-1;
-		if(borders.bottom>this.props.mapH-1) borders.bottom=this.props.mapH-1;
-		
 		let map=createLand(this.props.mapH, this.props.mapW);
+		
+		
 		let shownMap=[]
 		for(let i=borders.top;i<=borders.bottom;i++){
 			shownMap.push(map[i].slice(borders.left,borders.right+1))
 		}
+		shownMap[playerY-borders.top][playerX-borders.left]="player"
 		
     this.state={
       map:map,
 			shownMap:shownMap,
-			types:["grass","rock","ground"],
 			squareSize:40,
 			viewRange:viewRange,
 			playerX:playerX,
@@ -148,16 +153,20 @@ class Map extends React.Component{
 		let newY=this.state.playerY;
 		switch(e.key){
 			case 'ArrowLeft':
-				newX--;
+				if(newX>0)
+					newX--;
 				break;
 			case 'ArrowUp':
-				newY--;
+				if(newY>0)
+					newY--;
 				break;
 			case 'ArrowRight':
-				newX++;
+				if(newX<this.props.mapW-1)
+					newX++;
 				break;
 			case 'ArrowDown':
-				newY++;
+				if(newY<this.props.mapH-1)
+					newY++;
 				break;
 			default:
 				return 0;
@@ -166,15 +175,41 @@ class Map extends React.Component{
 		const viewRange=this.state.viewRange;
 		
 		let borders={			//borders indicate the last visible squares, and are included in the visible map
-			left:(newX<viewRange)?0:(newX-viewRange),
-			top:(newY<viewRange)?0:(newY-viewRange)
+			left:newX-viewRange,
+			top:newY-viewRange,
+			right:newX+viewRange,
+			bottom:newY+viewRange
 		}
 		
-		borders.right=borders.left+viewRange*2;
-		borders.bottom=borders.top+viewRange*2;
+		if(this.props.mapW>viewRange*2+1){
+			if(borders.left<0){
+				borders.right=viewRange*2;
+				borders.left=0;
+			}
+			
+			if(borders.right>this.props.mapW-1){
+				borders.right=this.props.mapW-1;
+				borders.left=borders.right-(viewRange*2);
+			}
+		} else {
+			borders.left=0;
+			borders.right=this.props.mapW-1;
+		}
 		
-		if(borders.right>this.props.mapW-1) borders.right=this.props.mapW-1;
-		if(borders.bottom>this.props.mapH-1) borders.bottom=this.props.mapH-1;
+		if(this.props.mapH>viewRange*2+1){
+			if(borders.top<0){
+				borders.bottom=viewRange*2;
+				borders.top=0;
+			}
+			
+			if(borders.bottom>this.props.mapH-1){
+				borders.bottom=this.props.mapH-1;
+				borders.top=borders.bottom-(viewRange*2);
+			}
+		} else {
+			borders.top=0;
+			borders.bottom=this.props.mapH-1;
+		}
 		
 		let map=this.state.map;
 		let shownMap=[]
@@ -182,27 +217,29 @@ class Map extends React.Component{
 			shownMap.push(map[i].slice(borders.left,borders.right+1))
 		}
 		
+		shownMap[newY-borders.top][newX-borders.left]="player"
+		
 		this.setState({
 			playerX:newX,
 			playerY:newY,
 			shownMap:shownMap
-		},()=>{
-			console.log(this.state.shownMap);
-			this.forceUpdate();
-			})
+		})
 	}
   
   render(){
-		let shownMap=this.state.shownMap;
+		let shownMap=this.state.shownMap.slice();
     //let map=this.state.map;
     let squares=[];
 		let squareStyle={
 			height:this.state.squareSize+"px",
 			width:this.state.squareSize+"px"
 		}
+		
+		
+		
     for(let i=0;i<shownMap.length;i++){
       for(let j=0;j<shownMap[i].length;j++){
-        squares.push(<Square type={this.state.types[shownMap[i][j]]} style={squareStyle} key={i+" "+j}/>)
+        squares.push(<Square type={shownMap[i][j]} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
@@ -243,6 +280,9 @@ class Square extends React.Component{
       case "rock":
         color="#5c4e29"
         break;
+			case "player":
+				color="#4287f5";
+				break;
       default:
         color="#000000"
     }
