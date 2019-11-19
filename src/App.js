@@ -148,7 +148,7 @@ class Map extends React.Component{
     }
   }
 	
-	handleKeyPress=(e)=>{
+	handleKeyDown=(e)=>{
 		let newX=this.state.playerX;
 		let newY=this.state.playerY;
 		switch(e.key){
@@ -171,6 +171,8 @@ class Map extends React.Component{
 			default:
 				return 0;
 		}
+		
+		if(this.state.map[newY][newX]=="rock") return;
 		
 		const viewRange=this.state.viewRange;
 		
@@ -249,7 +251,7 @@ class Map extends React.Component{
     };
 		
     return(
-      <div className="gameBoard" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyPress}>
+      <div className="gameBoard" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown}>
         {squares}
       </div>
     )
