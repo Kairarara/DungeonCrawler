@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import {createStore} from  'redux';
 
 /*terrain types are:
 	-grass
@@ -8,6 +9,27 @@ import './App.css';
 	-rock
 	-player
 */
+
+const initialState={
+	squareSize:40
+}
+
+function reducer(state=initialState, action) {
+	switch (action.type){
+		case "KEYDOWN":
+			break;
+		case "NEWMAP":
+			break;
+		case "":
+			break;
+		default:
+			return state;
+	}
+  console.log('reducer', state, action);
+  return state;
+}
+
+const store=createStore(reducer);
 
 let createLand=(mapH=10, mapW=30)=>{
   let map=[];
