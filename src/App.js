@@ -1,7 +1,8 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import {createStore} from  'redux';
+import {Provider} from 'react-redux';
+import Map from './Map';
 
 /*terrain types are:
 	-grass
@@ -10,28 +11,7 @@ import {createStore} from  'redux';
 	-player
 */
 
-const initialState={
-	squareSize:40
-}
-
-function reducer(state=initialState, action) {
-	switch (action.type){
-		case "KEYDOWN":
-			break;
-		case "NEWMAP":
-			break;
-		case "":
-			break;
-		default:
-			return state;
-	}
-  console.log('reducer', state, action);
-  return state;
-}
-
-const store=createStore(reducer);
-
-let createLand=(mapH=10, mapW=30)=>{
+let createLand=(mapH=20, mapW=20)=>{
   let map=[];
   for(let i=0; i<mapH; i++){
     map.push(new Array(mapW).fill("grass"))
@@ -74,7 +54,7 @@ let createLand=(mapH=10, mapW=30)=>{
 
 
 
-
+/*
 let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
   let map=[];
   for(let i=0; i<mapH; i++){
@@ -99,6 +79,7 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
         case 3:
           x=-1;
           break;
+				
       }
       let length=Math.floor(Math.random()*maxL)+1;
       
@@ -116,212 +97,79 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
   
   return map;
 }
+*/
 
-class App extends React.Component{
-  constructor() {
-    super();
-    this.state = {
-      
-    };
-  }
-  
-  render(){
-    
-    return(
-      <div className="app">
-        <Map mapW={20} mapH={20}/>
-      </div>
-    )
-  }
-}
 
-class Map extends React.Component{
-  constructor(props){
-    super(props);
-		
-		
-		let playerX=Math.floor(this.props.mapW/2);
-		let playerY=Math.floor(this.props.mapH/2);
-		const viewRange=4;
-		
-		let borders={			//borders indicate the last visible squares, and are included in the visible map
-			left:(playerX<viewRange)?0:(playerX-viewRange),
-			top:(playerY<viewRange)?0:(playerY-viewRange),
-			right:(playerX>(this.props.mapW-viewRange-1))?this.props.mapW-1:(playerX+viewRange),
-			bottom:(playerY>(this.props.mapH-viewRange-1))?this.props.mapH-1:(playerY+viewRange)
-		}
-		
-		let map=createLand(this.props.mapH, this.props.mapW);
-		
-		
-		let shownMap=[]
-		for(let i=borders.top;i<=borders.bottom;i++){
-			shownMap.push(map[i].slice(borders.left,borders.right+1))
-		}
-		shownMap[playerY-borders.top][playerX-borders.left]="player"
-		
-    this.state={
-      map:map,
-			shownMap:shownMap,
-			squareSize:40,
-			viewRange:viewRange,
-			playerX:playerX,
-			playerY:playerY
-    }
-  }
-	
-	handleKeyDown=(e)=>{
-		let newX=this.state.playerX;
-		let newY=this.state.playerY;
-		switch(e.key){
-			case 'ArrowLeft':
-				if(newX>0)
-					newX--;
-				break;
-			case 'ArrowUp':
-				if(newY>0)
-					newY--;
-				break;
-			case 'ArrowRight':
-				if(newX<this.props.mapW-1)
-					newX++;
-				break;
-			case 'ArrowDown':
-				if(newY<this.props.mapH-1)
-					newY++;
-				break;
-			default:
-				return 0;
-		}
-		
-		if(this.state.map[newY][newX]=="rock") return;
-		
-		const viewRange=this.state.viewRange;
-		
-		let borders={			//borders indicate the last visible squares, and are included in the visible map
-			left:newX-viewRange,
-			top:newY-viewRange,
-			right:newX+viewRange,
-			bottom:newY+viewRange
-		}
-		
-		if(this.props.mapW>viewRange*2+1){
-			if(borders.left<0){
-				borders.right=viewRange*2;
-				borders.left=0;
+const initializeState=(mapW=30,mapH=30)=>(
+	{
+		squareSize:40,
+		viewRange:4,
+		mapW:mapW,
+		mapH:mapH,
+		map:createLand(mapH,mapW),
+		playerX:15,
+		playerY:15
+	}
+)
+
+function reducer(state=initializeState(), action) {
+	switch (action.type){
+		case "KEYDOWN":
+			let newX=state.playerX;
+			let newY=state.playerY;
+			switch(action.key){
+				case 'ArrowLeft':
+					if(newX>0)
+						newX--;
+					break;
+				case 'ArrowUp':
+					if(newY>0)
+						newY--;
+					break;
+				case 'ArrowRight':
+					if(newX<state.mapW-1)
+						newX++;
+					break;
+				case 'ArrowDown':
+					if(newY<state.mapH-1)
+						newY++;
+					break;
+				default:
+					return state;
 			}
 			
-			if(borders.right>this.props.mapW-1){
-				borders.right=this.props.mapW-1;
-				borders.left=borders.right-(viewRange*2);
-			}
-		} else {
-			borders.left=0;
-			borders.right=this.props.mapW-1;
-		}
-		
-		if(this.props.mapH>viewRange*2+1){
-			if(borders.top<0){
-				borders.bottom=viewRange*2;
-				borders.top=0;
-			}
+			if(state.map[newY][newX]=="rock") return state;
 			
-			if(borders.bottom>this.props.mapH-1){
-				borders.bottom=this.props.mapH-1;
-				borders.top=borders.bottom-(viewRange*2);
+			return {
+				mapH:state.mapH,
+				mapW:state.mapW,
+				map:state.map,
+				squareSize:state.squareSize,
+				viewRange:state.viewRange,
+				playerX:newX,
+				playerY:newY
 			}
-		} else {
-			borders.top=0;
-			borders.bottom=this.props.mapH-1;
-		}
-		
-		let map=this.state.map;
-		let shownMap=[]
-		for(let i=borders.top;i<=borders.bottom;i++){
-			shownMap.push(map[i].slice(borders.left,borders.right+1))
-		}
-		
-		shownMap[newY-borders.top][newX-borders.left]="player"
-		
-		this.setState({
-			playerX:newX,
-			playerY:newY,
-			shownMap:shownMap
-		})
+		case "NEWMAP":
+			return {
+				
+			}
+		case "":
+			return {
+				
+			}
+		default:
+			return state;
 	}
-  
-  render(){
-		let shownMap=this.state.shownMap.slice();
-    //let map=this.state.map;
-    let squares=[];
-		let squareStyle={
-			height:this.state.squareSize+"px",
-			width:this.state.squareSize+"px"
-		}
-		
-		
-		
-    for(let i=0;i<shownMap.length;i++){
-      for(let j=0;j<shownMap[i].length;j++){
-        squares.push(<Square type={shownMap[i][j]} style={squareStyle} key={i+" "+j}/>)
-      }
-    }
-    let mapStyle={
-      gridTemplateColumns: "repeat("+shownMap[0].length+", "+(this.state.squareSize+2)+"px)",
-			width:(shownMap[0].length*(this.state.squareSize+2))+"px",
-			height:(shownMap.length*(this.state.squareSize+2))+"px"
-    };
-		
-    return(
-      <div className="gameBoard" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown}>
-        {squares}
-      </div>
-    )
-  }
+	
+  return state;
 }
 
-class Square extends React.Component{
-  constructor(props) {
-    super(props);
-    this.state = {
-      type:this.props.type
-    };
-  }
-  
-	componentWillReceiveProps(nextProps) {
-		this.setState({ type: nextProps.type });  
-	}
-	
-  render(){
-    let color;
-    switch(this.state.type){
-      case "ground":
-        color="#9c7711"
-        break;
-      case "grass":
-        color="#7ec850"
-        break;
-      case "rock":
-        color="#5c4e29"
-        break;
-			case "player":
-				color="#4287f5";
-				break;
-      default:
-        color="#000000"
-    }
-    let style=this.props.style;
-	
-    style={
-	  height:this.props.style.height,
-      background:color
-    }
-    
-    
-    return(
-      <div className="square" style={style}/>
-    )
-  }
-}
+const store=createStore(reducer);
+
+const App =()=>(
+	<Provider store={store} className="app">
+		<Map/>
+	</Provider>
+)
 
 export default App;
