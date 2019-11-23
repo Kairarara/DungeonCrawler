@@ -10,18 +10,32 @@ import Map from './Map';
 	-rock
 	-player
 */
+class Terrain{
+	constructor(type,canMoveThrough=true){
+		this.type=type;
+		this.canMoveThrough=canMoveThrough
+	}
+}
 
-let createLand=(mapH=20, mapW=20)=>{
+const terrains={
+	grass:new Terrain("grass"),
+	ground:new Terrain("ground"),
+	rock:new Terrain("rock",false),
+	player:new Terrain("player",false),
+	enemy:new Terrain("enemy",false)
+}
+
+let createLand=(mapH=20, mapW=20,enemies=10)=>{
   let map=[];
   for(let i=0; i<mapH; i++){
-    map.push(new Array(mapW).fill("grass"))
+    map.push(new Array(mapW).fill(terrains.grass))
   }
   
   function wall(i,j,chance){
     if(i<0 || j<0 || i>=mapH || j>=mapW) return 0;
-    if(map[i][j]==="grass"){
+    if(map[i][j]===terrains.grass){
       if(Math.floor(Math.random() * chance)<10){
-        map[i][j]="rock";
+        map[i][j]=terrains.rock;
         return true;
       }
     }
@@ -43,7 +57,7 @@ let createLand=(mapH=20, mapW=20)=>{
   for(let i=0;i<mapH;i++){
     for(let j=0;j<mapW;j++){
       if(Math.floor(Math.random() * 40)===0){
-        map[i][j]="rock";
+        map[i][j]=terrains.rock;
         growWall(i,j)
       }
     }
@@ -51,8 +65,6 @@ let createLand=(mapH=20, mapW=20)=>{
   
   return map;
 }
-
-
 
 /*
 let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
@@ -99,18 +111,54 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
 }
 */
 
+let generateEntity=(map, stats, recursiveCounter=0)=>{
+	let entity=stats;
+	
+	entity.coords={
+		x:Math.floor(Math.random()*(map[0].length)),
+		y:Math.floor(Math.random()*(map.length))
+	};
+	
+	if(map[entity.coords.y][entity.coords.x].canMoveThrough){
+		return entity.coords
+	} else {
+		if(recursiveCounter<50)
+			return generateEntity(map, stats, recursiveCounter+1);
+		else
+			throw "could not generate entity"
+	}
+}
 
-const initializeState=(mapW=30,mapH=30)=>(
-	{
+let generateEnemies=(map, enemyNumber=10)=>{
+	let enemies=new Array(enemyNumber);
+	
+	for(let i=0;i<enemies.length;i++){
+		enemies[i]={
+			x:Math.floor(Math.random()*map[0].length),
+			y:Math.floor(Math.random()*map.length)
+		}
+		
+	}
+	
+	return enemies;
+}
+
+const initializeState=(mapW=30,mapH=30)=>{
+	let map=createLand(mapH,mapW);
+	return 	{
 		squareSize:40,
 		viewRange:4,
 		mapW:mapW,
 		mapH:mapH,
-		map:createLand(mapH,mapW),
+		map:map,
 		playerX:15,
-		playerY:15
+		playerY:15,
+		playerHealth:100,
+		playerAtk:10,
+		playerDef:10,
+		enemyCoords:generateEnemies(map)
 	}
-)
+}
 
 function reducer(state=initializeState(), action) {
 	switch (action.type){
@@ -138,7 +186,7 @@ function reducer(state=initializeState(), action) {
 					return state;
 			}
 			
-			if(state.map[newY][newX]=="rock") return state;
+			if(!state.map[newY][newX].canMoveThrough) return state;
 			
 			return {
 				mapH:state.mapH,
@@ -167,9 +215,12 @@ function reducer(state=initializeState(), action) {
 const store=createStore(reducer);
 
 const App =()=>(
-	<Provider store={store} className="app">
-		<Map/>
+	<Provider store={store}>
+		<div className="app">
+			<Map/>
+		</div>
 	</Provider>
 )
 
 export default App;
+export {terrains};

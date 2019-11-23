@@ -1,0 +1,11 @@
+.map{
+	margin:auto;
+	height:462px;
+	width:462px;
+  display:grid;
+	overflow:hidden;
+}
+
+.square{
+  margin:1px;
+}

@@ -1,5 +1,7 @@
 import React from 'react';
+import './Map.css';
 import {connect} from 'react-redux';
+import {terrains} from "./App"
 
 let mapStateToProps=(state)=>{
 	return {
@@ -68,7 +70,7 @@ class Map extends React.Component{
 			shownMap.push(map[i].slice(borders.left,borders.right+1))
 		}
 		
-		shownMap[this.props.playerY-borders.top][this.props.playerX-borders.left]="player"
+		shownMap[this.props.playerY-borders.top][this.props.playerX-borders.left]=terrains.player
     
     let squares=[];
 		let squareStyle={
@@ -80,7 +82,7 @@ class Map extends React.Component{
 		
     for(let i=0;i<shownMap.length;i++){
       for(let j=0;j<shownMap[i].length;j++){
-        squares.push(<Square type={shownMap[i][j]} style={squareStyle} key={i+" "+j}/>)
+        squares.push(<Square type={shownMap[i][j].type} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
@@ -90,7 +92,7 @@ class Map extends React.Component{
     };
 		
     return(
-      <div className="gameBoard" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown}>
+      <div className="map" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown}>
         {squares}
       </div>
     )
