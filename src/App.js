@@ -111,60 +111,148 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
 }
 */
 
-let generateEntity=(map, stats, recursiveCounter=0)=>{
-	let entity=stats;
-	
-	entity.coords={
-		x:Math.floor(Math.random()*(map[0].length)),
-		y:Math.floor(Math.random()*(map.length))
-	};
-	
-	if(map[entity.coords.y][entity.coords.x].canMoveThrough){
-		return entity.coords
-	} else {
-		if(recursiveCounter<50)
-			return generateEntity(map, stats, recursiveCounter+1);
-		else
-			throw "could not generate entity"
+class Entity{
+	constructor(map,stats){
+		this.stats=stats;
+		
+		let generateCoords=(recursiveCounter=0)=>{
+			let coords={
+				x:Math.floor(Math.random()*(map[0].length)),
+				y:Math.floor(Math.random()*(map.length))
+			};
+			
+			if(map[coords.y][coords.x].canMoveThrough){
+				return coords
+			} else {
+				if(recursiveCounter<50)
+					return generateCoords(recursiveCounter+1);
+				else
+					throw "could not generate coordinates"
+			}
+		}
+		this.coords=generateCoords()
 	}
 }
 
-let generateEnemies=(map, enemyNumber=10)=>{
-	let enemies=new Array(enemyNumber);
-	
-	for(let i=0;i<enemies.length;i++){
-		enemies[i]={
-			x:Math.floor(Math.random()*map[0].length),
-			y:Math.floor(Math.random()*map.length)
+let generateEnemies=(map, enemyNumbers)=>{
+	const enemyStats={
+		ogre:{
+			health:100,
+			atk:10,
+			def:10
+		},
+		goblin:{
+			health:100,
+			atk:10,
+			def:10
 		}
-		
+	}
+	
+	let enemies=[];
+	
+	for(let i=0;i<enemyNumbers.length;i++){
+		for(let j=0;j<enemyNumbers[i].quantity;j++){
+			enemies.push(new Entity(map, enemyStats[enemyNumbers[i].type]));
+		}
 	}
 	
 	return enemies;
 }
 
+let generateShownMap=(state)=>{
+	let borders={			//borders indicate the last visible squares, and are included in the visible map
+		left:state.player.coords.x-state.viewRange,
+		top:state.player.coords.y-state.viewRange,
+		right:state.player.coords.x+state.viewRange,
+		bottom:state.player.coords.y+state.viewRange
+	}
+	
+	if(state.mapW>state.viewRange*2+1){
+		if(borders.left<0){
+			borders.right=state.viewRange*2;
+			borders.left=0;
+		}
+		
+		if(borders.right>state.mapW-1){
+			borders.right=state.mapW-1;
+			borders.left=borders.right-(state.viewRange*2);
+		}
+	} else {
+		borders.left=0;
+		borders.right=state.mapW-1;
+	}
+	
+	if(state.mapH>state.viewRange*2+1){
+		if(borders.top<0){
+			borders.bottom=state.viewRange*2;
+			borders.top=0;
+		}
+		
+		if(borders.bottom>state.mapH-1){
+			borders.bottom=state.mapH-1;
+			borders.top=borders.bottom-(state.viewRange*2);
+		}
+	} else {
+		borders.top=0;
+		borders.bottom=state.mapH-1;
+	}
+	
+	let shownMap=[]
+	for(let i=borders.top;i<=borders.bottom;i++){
+		shownMap.push(state.map[i].slice(borders.left,borders.right+1))
+	}
+	
+	
+	shownMap[state.player.coords.y-borders.top][state.player.coords.x-borders.left]=terrains.player
+	
+	for(let i=0;i<state.enemies.length;i++){
+		if(state.enemies[i].coords.x>=borders.left&&state.enemies[i].coords.x<=borders.right&&state.enemies[i].coords.y>=borders.top&&state.enemies[i].coords.y<=borders.bottom)
+			shownMap[state.enemies[i].coords.y-borders.top][state.enemies[i].coords.x-borders.left]=terrains.enemy
+	}
+	
+	return shownMap;
+}
+
 const initializeState=(mapW=30,mapH=30)=>{
-	let map=createLand(mapH,mapW);
-	return 	{
-		squareSize:40,
-		viewRange:4,
+	let playerStats={
+		health:100,
+		atk:10,
+		def:10
+	}
+	
+	let enemyNumbers=[
+		{
+			quantity:5,
+			type:"ogre"
+		},
+		{
+			quantity:5,
+			type:"goblin"
+		},
+	]
+	
+	let initialState={
+		map:createLand(mapH,mapW),
 		mapW:mapW,
 		mapH:mapH,
-		map:map,
-		playerX:15,
-		playerY:15,
-		playerHealth:100,
-		playerAtk:10,
-		playerDef:10,
-		enemyCoords:generateEnemies(map)
-	}
+		squareSize:40,
+		viewRange:4,
+	};
+	
+	initialState.player=new Entity(initialState.map, playerStats);
+	initialState.enemies=generateEnemies(initialState.map, enemyNumbers);
+	
+	initialState.shownMap=generateShownMap(initialState)
+	console.log(initialState)
+	
+	return initialState;
 }
 
 function reducer(state=initializeState(), action) {
 	switch (action.type){
 		case "KEYDOWN":
-			let newX=state.playerX;
-			let newY=state.playerY;
+			let newX=state.player.coords.x;
+			let newY=state.player.coords.y;
 			switch(action.key){
 				case 'ArrowLeft':
 					if(newX>0)
@@ -186,17 +274,25 @@ function reducer(state=initializeState(), action) {
 					return state;
 			}
 			
+			
 			if(!state.map[newY][newX].canMoveThrough) return state;
 			
-			return {
+			let newState={
 				mapH:state.mapH,
 				mapW:state.mapW,
 				map:state.map,
-				squareSize:state.squareSize,
 				viewRange:state.viewRange,
-				playerX:newX,
-				playerY:newY
+				player:{
+					coords:{
+						x:newX,
+						y:newY
+					}
+				},
+				enemies:state.enemies
 			}
+			newState.shownMap=generateShownMap(newState);
+			
+			return newState;
 		case "NEWMAP":
 			return {
 				
