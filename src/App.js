@@ -4,12 +4,6 @@ import {createStore} from  'redux';
 import {Provider} from 'react-redux';
 import Map from './Map';
 
-/*terrain types are:
-	-grass
-	-ground
-	-rock
-	-player
-*/
 class Terrain{
 	constructor(type,canMoveThrough=true){
 		this.type=type;
@@ -138,13 +132,13 @@ let generateEnemies=(map, enemyNumbers)=>{
 	const enemyStats={
 		ogre:{
 			health:100,
-			atk:10,
-			def:10
+			atk:11,
+			def:4
 		},
 		goblin:{
 			health:100,
-			atk:10,
-			def:10
+			atk:11,
+			def:3
 		}
 	}
 	
@@ -232,6 +226,7 @@ const initializeState=(mapW=30,mapH=30)=>{
 	]
 	
 	let initialState={
+		gameState:"playing",
 		map:createLand(mapH,mapW),
 		mapW:mapW,
 		mapH:mapH,
@@ -243,12 +238,13 @@ const initializeState=(mapW=30,mapH=30)=>{
 	initialState.enemies=generateEnemies(initialState.map, enemyNumbers);
 	
 	initialState.shownMap=generateShownMap(initialState)
-	console.log(initialState)
 	
 	return initialState;
 }
 
 function reducer(state=initializeState(), action) {
+
+	
 	switch (action.type){
 		case "KEYDOWN":
 			let newX=state.player.coords.x;
@@ -274,21 +270,61 @@ function reducer(state=initializeState(), action) {
 					return state;
 			}
 			
-			
 			if(!state.map[newY][newX].canMoveThrough) return state;
+			let newPlayerHealth=state.player.stats.health;
+			let newEnemies=state.enemies;
+			
+			let battle=(entity,enemy)=>{
+				let health=entity.stats.health;
+				let enemyHealth=enemy.stats.health;
+				while(health>0){
+					enemyHealth-=(entity.stats.atk-enemy.stats.def);
+					if(enemyHealth>0){
+						health-=(enemy.stats.atk-entity.stats.def);
+					} else {
+						return {
+							health:health,
+							enemyHealth:enemyHealth
+						}
+					}
+				}
+				return {
+					health:health,
+					enemyHealth:enemyHealth
+				}
+			}
+			
+			for(let i=0;i<state.enemies.length;i++){
+				if(state.enemies[i].coords.x===newX&&state.enemies[i].coords.y===newY){
+					console.log(state.player.stats.health)
+					let battleResults=battle(state.player,state.enemies[i]);
+					if(battleResults.health<=0){
+						return state
+					} else {
+						newPlayerHealth=battleResults.health;
+						newEnemies=state.enemies.slice(0,i).concat(state.enemies.slice(i+1));
+					}
+				}
+			}
 			
 			let newState={
+				gameState:"playing",
 				mapH:state.mapH,
 				mapW:state.mapW,
 				map:state.map,
 				viewRange:state.viewRange,
 				player:{
+					stats:{
+						atk:state.player.stats.atk,
+						def:state.player.stats.def,
+						health:newPlayerHealth
+					},
 					coords:{
 						x:newX,
 						y:newY
 					}
 				},
-				enemies:state.enemies
+				enemies:newEnemies
 			}
 			newState.shownMap=generateShownMap(newState);
 			
