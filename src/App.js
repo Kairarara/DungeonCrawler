@@ -5,31 +5,41 @@ import {Provider} from 'react-redux';
 import Map from './Map';
 
 class Terrain{
-	constructor(type,canMoveThrough=true){
+	constructor(type){
 		this.type=type;
-		this.canMoveThrough=canMoveThrough
+		switch(type){
+			case "grass":
+			case "ground":
+				this.canMoveThrough=true;
+				break;
+			case "rock":
+			case "player":
+			case "enemy":
+				this.canMoveThrough=false;
+				break;
+			default:
+				throw type+" is not a valid terrain type";
+		}
 	}
 }
 
-const terrains={
-	grass:new Terrain("grass"),
-	ground:new Terrain("ground"),
-	rock:new Terrain("rock",false),
-	player:new Terrain("player",false),
-	enemy:new Terrain("enemy",false)
-}
-
-let createLand=(mapH=20, mapW=20,enemies=10)=>{
-  let map=[];
+let createValley=(mapH=20, mapW=20)=>{
+  let land=[];
   for(let i=0; i<mapH; i++){
-    map.push(new Array(mapW).fill(terrains.grass))
+		let newStrip=[];
+		for(let j=0;j<mapW;j++){
+			newStrip.push(new Terrain("grass"));
+		}
+    land.push(newStrip)
   }
   
+	
+	
   function wall(i,j,chance){
     if(i<0 || j<0 || i>=mapH || j>=mapW) return 0;
-    if(map[i][j]===terrains.grass){
+    if(land[i][j].type==="grass"){
       if(Math.floor(Math.random() * chance)<10){
-        map[i][j]=terrains.rock;
+        land[i][j]=new Terrain("rock");
         return true;
       }
     }
@@ -51,13 +61,13 @@ let createLand=(mapH=20, mapW=20,enemies=10)=>{
   for(let i=0;i<mapH;i++){
     for(let j=0;j<mapW;j++){
       if(Math.floor(Math.random() * 40)===0){
-        map[i][j]=terrains.rock;
+        land[i][j]=new Terrain("rock");
         growWall(i,j)
       }
     }
   }
   
-  return map;
+  return land;
 }
 
 /*
@@ -105,30 +115,7 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
 }
 */
 
-class Entity{
-	constructor(map,stats){
-		this.stats=stats;
-		
-		let generateCoords=(recursiveCounter=0)=>{
-			let coords={
-				x:Math.floor(Math.random()*(map[0].length)),
-				y:Math.floor(Math.random()*(map.length))
-			};
-			
-			if(map[coords.y][coords.x].canMoveThrough){
-				return coords
-			} else {
-				if(recursiveCounter<50)
-					return generateCoords(recursiveCounter+1);
-				else
-					throw "could not generate coordinates"
-			}
-		}
-		this.coords=generateCoords()
-	}
-}
-
-let generateEnemies=(map, enemyNumbers)=>{
+let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 	const enemyStats={
 		ogre:{
 			health:100,
@@ -141,19 +128,56 @@ let generateEnemies=(map, enemyNumbers)=>{
 			def:3
 		}
 	}
+		
+	let map=new Object();
 	
-	let enemies=[];
+	switch(landType){
+		case "valley":{
+			map.land=createValley(mapH,mapW)
+			break;
+		}
+		default:{
+			throw landType+" is not a valid land type"
+		}
+	}
+
+	map.enemies=[];
 	
 	for(let i=0;i<enemyNumbers.length;i++){
 		for(let j=0;j<enemyNumbers[i].quantity;j++){
-			enemies.push(new Entity(map, enemyStats[enemyNumbers[i].type]));
+			
+			let generateCoords=(recursiveCounter=0)=>{
+				let coords={
+					x:Math.floor(Math.random()*(map.land[0].length)),
+					y:Math.floor(Math.random()*(map.land.length))
+				};
+				
+				if(map.land[coords.y][coords.x].canMoveThrough && !(map.land[coords.y][coords.x].hasOwnProperty("occupied"))){
+					return coords
+				} else {
+					if(recursiveCounter<100)
+						return generateCoords(recursiveCounter+1);
+					else
+						throw "could not generate coordinates"
+				}
+			}
+			
+			let enemy={
+				health:enemyStats[enemyNumbers[i].type].health,
+				atk:enemyStats[enemyNumbers[i].type].atk,
+				def:enemyStats[enemyNumbers[i].type].def,
+				type:enemyNumbers[i].type,
+				id:map.enemies.length,
+				coords:generateCoords()
+			};
+			map.enemies.push(enemy);
+			map.land[enemy.coords.y][enemy.coords.x].occupied=enemy.id;
 		}
 	}
-	
-	return enemies;
+	return map;
 }
 
-let generateShownMap=(state)=>{
+let generateShownMap=(state, currentMap="map0")=>{
 	let borders={			//borders indicate the last visible squares, and are included in the visible map
 		left:state.player.coords.x-state.viewRange,
 		top:state.player.coords.y-state.viewRange,
@@ -192,16 +216,22 @@ let generateShownMap=(state)=>{
 	}
 	
 	let shownMap=[]
-	for(let i=borders.top;i<=borders.bottom;i++){
-		shownMap.push(state.map[i].slice(borders.left,borders.right+1))
-	}
-	
-	
-	shownMap[state.player.coords.y-borders.top][state.player.coords.x-borders.left]=terrains.player
-	
-	for(let i=0;i<state.enemies.length;i++){
-		if(state.enemies[i].coords.x>=borders.left&&state.enemies[i].coords.x<=borders.right&&state.enemies[i].coords.y>=borders.top&&state.enemies[i].coords.y<=borders.bottom)
-			shownMap[state.enemies[i].coords.y-borders.top][state.enemies[i].coords.x-borders.left]=terrains.enemy
+	for(let y=borders.top;y<=borders.bottom;y++){
+		let newStrip=[]
+		for(let x=borders.left;x<=borders.right;x++){
+			let square=state[currentMap].land[y][x];
+			let type;
+			if(square.hasOwnProperty("occupied")){
+				if(square.occupied=="player")
+					type="player";
+				else
+					type=state[currentMap].enemies[square.occupied].type;
+			} else {
+				type=square.type;
+			}
+			newStrip.push(type);
+		}
+		shownMap.push(newStrip)
 	}
 	
 	return shownMap;
@@ -227,15 +257,34 @@ const initializeState=(mapW=30,mapH=30)=>{
 	
 	let initialState={
 		gameState:"playing",
-		map:createLand(mapH,mapW),
+		map0:generateMap("valley", mapH, mapW, enemyNumbers),
 		mapW:mapW,
 		mapH:mapH,
 		squareSize:40,
 		viewRange:4,
 	};
 	
-	initialState.player=new Entity(initialState.map, playerStats);
-	initialState.enemies=generateEnemies(initialState.map, enemyNumbers);
+	let generateCoords=(recursiveCounter=0)=>{
+		let map=initialState.map0;
+		let coords={
+			x:Math.floor(Math.random()*(map.land[0].length)),
+			y:Math.floor(Math.random()*(map.land.length))
+		};
+		
+		if(map.land[coords.y][coords.x].canMoveThrough && !(map.land[coords.y][coords.x].hasOwnProperty("occupied"))){
+			return coords
+		} else {
+			if(recursiveCounter<50)
+				return generateCoords(recursiveCounter+1);
+			else
+				throw "could not generate coordinates"
+		}
+	}
+	
+	initialState.player=playerStats;
+	initialState.player.coords=generateCoords();
+	
+	initialState.map0.land[initialState.player.coords.y][initialState.player.coords.x].occupied="player";
 	
 	initialState.shownMap=generateShownMap(initialState)
 	
@@ -296,7 +345,6 @@ function reducer(state=initializeState(), action) {
 			
 			for(let i=0;i<state.enemies.length;i++){
 				if(state.enemies[i].coords.x===newX&&state.enemies[i].coords.y===newY){
-					console.log(state.player.stats.health)
 					let battleResults=battle(state.player,state.enemies[i]);
 					if(battleResults.health<=0){
 						return state
@@ -355,4 +403,3 @@ const App =()=>(
 )
 
 export default App;
-export {terrains};

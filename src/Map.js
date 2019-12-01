@@ -1,7 +1,6 @@
 import React from 'react';
 import './Map.css';
 import {connect} from 'react-redux';
-import {terrains} from "./App"
 
 let mapStateToProps=(state)=>{
 	return {
@@ -28,7 +27,7 @@ class Map extends React.Component{
 		
     for(let i=0;i<this.props.shownMap.length;i++){
       for(let j=0;j<this.props.shownMap[i].length;j++){
-        squares.push(<Square type={this.props.shownMap[i][j].type} style={squareStyle} key={i+" "+j}/>)
+        squares.push(<Square type={this.props.shownMap[i][j]} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
@@ -72,7 +71,8 @@ class Square extends React.Component{
 			case "player":
 				color="#4287f5";
 				break;
-			case "enemy":
+			case "goblin":
+			case "ogre":
 				color="#b51616";
 				break;
       default:
