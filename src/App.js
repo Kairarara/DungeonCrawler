@@ -177,7 +177,7 @@ let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 	return map;
 }
 
-let generateShownMap=(state, currentMap="map0")=>{
+let generateShownMap=(state, currentMapId=0)=>{
 	let borders={			//borders indicate the last visible squares, and are included in the visible map
 		left:state.player.coords.x-state.viewRange,
 		top:state.player.coords.y-state.viewRange,
@@ -185,47 +185,50 @@ let generateShownMap=(state, currentMap="map0")=>{
 		bottom:state.player.coords.y+state.viewRange
 	}
 	
-	if(state.mapW>state.viewRange*2+1){
+	let mapW=state.maps[currentMapId].land[0].length;
+	let mapH=state.maps[currentMapId].land.length;
+	
+	if(mapW>state.viewRange*2+1){
 		if(borders.left<0){
 			borders.right=state.viewRange*2;
 			borders.left=0;
 		}
 		
-		if(borders.right>state.mapW-1){
-			borders.right=state.mapW-1;
+		if(borders.right>mapW-1){
+			borders.right=mapW-1;
 			borders.left=borders.right-(state.viewRange*2);
 		}
 	} else {
 		borders.left=0;
-		borders.right=state.mapW-1;
+		borders.right=mapW-1;
 	}
 	
-	if(state.mapH>state.viewRange*2+1){
+	if(mapH>state.viewRange*2+1){
 		if(borders.top<0){
 			borders.bottom=state.viewRange*2;
 			borders.top=0;
 		}
 		
-		if(borders.bottom>state.mapH-1){
-			borders.bottom=state.mapH-1;
+		if(borders.bottom>mapH-1){
+			borders.bottom=mapH-1;
 			borders.top=borders.bottom-(state.viewRange*2);
 		}
 	} else {
 		borders.top=0;
-		borders.bottom=state.mapH-1;
+		borders.bottom=mapH-1;
 	}
 	
 	let shownMap=[]
 	for(let y=borders.top;y<=borders.bottom;y++){
 		let newStrip=[]
 		for(let x=borders.left;x<=borders.right;x++){
-			let square=state[currentMap].land[y][x];
+			let square=state.maps[currentMapId].land[y][x];
 			let type;
 			if(square.hasOwnProperty("occupied")){
 				if(square.occupied=="player")
 					type="player";
 				else
-					type=state[currentMap].enemies[square.occupied].type;
+					type=state.maps[currentMapId].enemies[square.occupied].type;
 			} else {
 				type=square.type;
 			}
@@ -257,15 +260,16 @@ const initializeState=(mapW=30,mapH=30)=>{
 	
 	let initialState={
 		gameState:"playing",
-		map0:generateMap("valley", mapH, mapW, enemyNumbers),
-		mapW:mapW,
-		mapH:mapH,
+		maps:[generateMap("valley", mapH, mapW, enemyNumbers)],
 		squareSize:40,
 		viewRange:4,
+		currentMapId:0,
+		//player
+		//shownMap
 	};
 	
 	let generateCoords=(recursiveCounter=0)=>{
-		let map=initialState.map0;
+		let map=initialState.maps[0];
 		let coords={
 			x:Math.floor(Math.random()*(map.land[0].length)),
 			y:Math.floor(Math.random()*(map.land.length))
@@ -284,7 +288,7 @@ const initializeState=(mapW=30,mapH=30)=>{
 	initialState.player=playerStats;
 	initialState.player.coords=generateCoords();
 	
-	initialState.map0.land[initialState.player.coords.y][initialState.player.coords.x].occupied="player";
+	initialState.maps[0].land[initialState.player.coords.y][initialState.player.coords.x].occupied="player";
 	
 	initialState.shownMap=generateShownMap(initialState)
 	
@@ -296,8 +300,18 @@ function reducer(state=initializeState(), action) {
 	
 	switch (action.type){
 		case "KEYDOWN":
-			let newX=state.player.coords.x;
-			let newY=state.player.coords.y;
+			let maps=JSON.parse(JSON.stringify(state.maps));
+			let map=maps[state.currentMapId];
+			let entity;
+			let entityIsPlayer=(action.id=="player")
+			if(entityIsPlayer){
+				entity=Object.assign({},state.player)
+			} else {
+				entity=map.entities[action.id];
+			}
+			
+			let newX=entity.coords.x;
+			let newY=entity.coords.y;
 			switch(action.key){
 				case 'ArrowLeft':
 					if(newX>0)
@@ -308,28 +322,31 @@ function reducer(state=initializeState(), action) {
 						newY--;
 					break;
 				case 'ArrowRight':
-					if(newX<state.mapW-1)
+					if(newX<map.land[0].length-1)
 						newX++;
 					break;
 				case 'ArrowDown':
-					if(newY<state.mapH-1)
+					if(newY<map.land.length-1)
 						newY++;
 					break;
 				default:
 					return state;
 			}
 			
-			if(!state.map[newY][newX].canMoveThrough) return state;
-			let newPlayerHealth=state.player.stats.health;
-			let newEnemies=state.enemies;
+			console.log(entity.coords.x,newX);
+			
+			if(!map.land[newY][newX].canMoveThrough || map.land[newY][newX].hasOwnProperty("occupied")) return state;
+			
+			let newHealth=entity.health;
+			let newEntities=map.entities;
 			
 			let battle=(entity,enemy)=>{
-				let health=entity.stats.health;
-				let enemyHealth=enemy.stats.health;
+				let health=entity.health;
+				let enemyHealth=enemy.health;
 				while(health>0){
-					enemyHealth-=(entity.stats.atk-enemy.stats.def);
+					enemyHealth-=(entity.atk-enemy.def);
 					if(enemyHealth>0){
-						health-=(enemy.stats.atk-entity.stats.def);
+						health-=(enemy.atk-entity.def);
 					} else {
 						return {
 							health:health,
@@ -342,37 +359,19 @@ function reducer(state=initializeState(), action) {
 					enemyHealth:enemyHealth
 				}
 			}
+			map.land[newY][newX].occupied=map.land[entity.coords.y][entity.coords.x].occupied;
+			delete map.land[entity.coords.y][entity.coords.x].occupied;
 			
-			for(let i=0;i<state.enemies.length;i++){
-				if(state.enemies[i].coords.x===newX&&state.enemies[i].coords.y===newY){
-					let battleResults=battle(state.player,state.enemies[i]);
-					if(battleResults.health<=0){
-						return state
-					} else {
-						newPlayerHealth=battleResults.health;
-						newEnemies=state.enemies.slice(0,i).concat(state.enemies.slice(i+1));
-					}
-				}
-			}
+			entity.coords.x=newX;
+			entity.coords.y=newY;
 			
 			let newState={
-				gameState:"playing",
-				mapH:state.mapH,
-				mapW:state.mapW,
-				map:state.map,
+				gameState:state.gameState,
+				maps:maps,
+				squareSize:state.squareSize,
 				viewRange:state.viewRange,
-				player:{
-					stats:{
-						atk:state.player.stats.atk,
-						def:state.player.stats.def,
-						health:newPlayerHealth
-					},
-					coords:{
-						x:newX,
-						y:newY
-					}
-				},
-				enemies:newEnemies
+				currentMapId:state.currentMapId,
+				player:(entityIsPlayer)?entity:state.player
 			}
 			newState.shownMap=generateShownMap(newState);
 			

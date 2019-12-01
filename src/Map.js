@@ -14,7 +14,8 @@ class Map extends React.Component{
 	handleKeyDown=(e)=>{
 		this.props.dispatch({
 			type:"KEYDOWN",
-			key:e.key
+			key:e.key,
+			id:"player"
 		})
 	}
   
