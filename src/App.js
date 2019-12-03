@@ -120,12 +120,12 @@ let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 		ogre:{
 			health:100,
 			atk:11,
-			def:4
+			def:8
 		},
 		goblin:{
 			health:100,
 			atk:11,
-			def:3
+			def:8
 		}
 	}
 		
@@ -314,31 +314,29 @@ function reducer(state=initializeState(), action) {
 			let newY=entity.coords.y;
 			switch(action.key){
 				case 'ArrowLeft':
-					if(newX>0)
-						newX--;
+					if(newX<=0) return state;
+					newX--;
 					break;
 				case 'ArrowUp':
-					if(newY>0)
-						newY--;
+					if(newY<=0) return state;
+					newY--;
 					break;
 				case 'ArrowRight':
-					if(newX<map.land[0].length-1)
-						newX++;
+					if(newX>=map.land[0].length-1) return state;
+					newX++;
 					break;
 				case 'ArrowDown':
-					if(newY<map.land.length-1)
-						newY++;
+					if(newY>=map.land.length-1) return state;
+					newY++;
 					break;
 				default:
 					return state;
 			}
 			
-			console.log(entity.coords.x,newX);
 			
-			if(!map.land[newY][newX].canMoveThrough || map.land[newY][newX].hasOwnProperty("occupied")) return state;
+			if(!map.land[newY][newX].canMoveThrough) return state;
 			
-			let newHealth=entity.health;
-			let newEntities=map.entities;
+			let newGameState=state.gameState;
 			
 			let battle=(entity,enemy)=>{
 				let health=entity.health;
@@ -348,17 +346,26 @@ function reducer(state=initializeState(), action) {
 					if(enemyHealth>0){
 						health-=(enemy.atk-entity.def);
 					} else {
-						return {
-							health:health,
-							enemyHealth:enemyHealth
-						}
+						return health;
 					}
 				}
-				return {
-					health:health,
-					enemyHealth:enemyHealth
+				return "loss";
+			}
+			
+			
+			if(map.land[newY][newX].hasOwnProperty("occupied")){
+				let adversaryId=map.land[newY][newX].occupied;
+				let result=battle(entity, map.enemies[adversaryId]);
+				if((result=="loss" && entityIsPlayer) || (result!="loss" && !entityIsPlayer)){
+					newGameState="Game Over";
+					return state; //to remove and to add a game over screen
+				} else {
+					entity.health=result;
+					map.enemies[adversaryId]="dead";
+					delete map.land[newY][newX].occupied;
 				}
 			}
+			
 			map.land[newY][newX].occupied=map.land[entity.coords.y][entity.coords.x].occupied;
 			delete map.land[entity.coords.y][entity.coords.x].occupied;
 			
@@ -366,7 +373,7 @@ function reducer(state=initializeState(), action) {
 			entity.coords.y=newY;
 			
 			let newState={
-				gameState:state.gameState,
+				gameState:newGameState,
 				maps:maps,
 				squareSize:state.squareSize,
 				viewRange:state.viewRange,
