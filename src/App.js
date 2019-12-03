@@ -3,6 +3,7 @@ import './App.css';
 import {createStore} from  'redux';
 import {Provider} from 'react-redux';
 import Map from './Map';
+import EntityInfo from './EntityInfo';
 
 class Terrain{
 	constructor(type){
@@ -118,11 +119,13 @@ let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
 let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 	const enemyStats={
 		ogre:{
+			maxHealth:100,
 			health:100,
 			atk:11,
 			def:8
 		},
 		goblin:{
+			maxHealth:100,
 			health:100,
 			atk:11,
 			def:8
@@ -163,6 +166,7 @@ let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 			}
 			
 			let enemy={
+				maxHealth:enemyStats[enemyNumbers[i].type].maxHealth,
 				health:enemyStats[enemyNumbers[i].type].health,
 				atk:enemyStats[enemyNumbers[i].type].atk,
 				def:enemyStats[enemyNumbers[i].type].def,
@@ -242,6 +246,7 @@ let generateShownMap=(state, currentMapId=0)=>{
 
 const initializeState=(mapW=30,mapH=30)=>{
 	let playerStats={
+		maxHealth:100,
 		health:100,
 		atk:10,
 		def:10
@@ -403,6 +408,7 @@ const store=createStore(reducer);
 const App =()=>(
 	<Provider store={store}>
 		<div className="app">
+			<EntityInfo entityId="player"/>
 			<Map/>
 		</div>
 	</Provider>
