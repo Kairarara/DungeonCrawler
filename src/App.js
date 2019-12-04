@@ -122,13 +122,15 @@ let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 			maxHealth:100,
 			health:100,
 			atk:11,
-			def:8
+			def:2,
+			expBounty:60
 		},
 		goblin:{
 			maxHealth:100,
 			health:100,
 			atk:11,
-			def:8
+			def:2,
+			expBounty:60
 		}
 	}
 		
@@ -170,6 +172,7 @@ let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 				health:enemyStats[enemyNumbers[i].type].health,
 				atk:enemyStats[enemyNumbers[i].type].atk,
 				def:enemyStats[enemyNumbers[i].type].def,
+				expBounty:enemyStats[enemyNumbers[i].type].expBounty,
 				type:enemyNumbers[i].type,
 				id:map.enemies.length,
 				coords:generateCoords()
@@ -246,6 +249,8 @@ let generateShownMap=(state, currentMapId=0)=>{
 
 const initializeState=(mapW=30,mapH=30)=>{
 	let playerStats={
+		exp:0,
+		lvl:1,
 		maxHealth:100,
 		health:100,
 		atk:10,
@@ -346,10 +351,14 @@ function reducer(state=initializeState(), action) {
 			let battle=(entity,enemy)=>{
 				let health=entity.health;
 				let enemyHealth=enemy.health;
+				let dmg1=entity.atk-enemy.def;
+				if(dmg1<0) dmg1=0;
+				let dmg2=enemy.atk-entity.def;
+				if(dmg2<0) dmg2=0;
 				while(health>0){
-					enemyHealth-=(entity.atk-enemy.def);
+					enemyHealth-=dmg1;
 					if(enemyHealth>0){
-						health-=(enemy.atk-entity.def);
+						health-=dmg2;
 					} else {
 						return health;
 					}
@@ -366,6 +375,17 @@ function reducer(state=initializeState(), action) {
 					return state; //to remove and to add a game over screen
 				} else {
 					entity.health=result;
+					if(entityIsPlayer){
+						entity.exp+=map.enemies[adversaryId].expBounty;
+						let expCap=entity.lvl*100;
+						while(entity.exp>expCap){
+							entity.exp-=expCap;
+							entity.lvl++;
+							entity.atk++;
+							entity.def++;
+							expCap+=100;
+						}
+					}
 					map.enemies[adversaryId]="dead";
 					delete map.land[newY][newX].occupied;
 				}

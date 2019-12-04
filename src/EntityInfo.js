@@ -19,10 +19,12 @@ let EntityInfo=(props)=>{
 		entity=props.enemies[props.entityId];
 	}
 	let relativeHealth=Math.floor(entity.health/entity.maxHealth*100);
-	console.log(relativeHealth)
+	let relativeExp=Math.floor(entity.exp/entity.lvl)
+	console.log(entity)
 	return(
 		<div className={"entityInfo "+entityType+"Info"}>
 			<img/>
+			<Bar value={relativeExp+"%"}/>
 			<Bar value={relativeHealth+"%"}/>
 			<p>Atk:{entity.atk}</p>
 			<p>Def:{entity.def}</p>
