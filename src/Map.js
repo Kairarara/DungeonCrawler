@@ -5,7 +5,8 @@ import {connect} from 'react-redux';
 let mapStateToProps=(state)=>{
 	return {
 		squareSize:state.squareSize,
-		shownMap:state.shownMap
+		shownMap:state.shownMap,
+		enemies:state.maps[state.currentMapId].enemies
 	}
 }
 
@@ -28,7 +29,17 @@ class Map extends React.Component{
 		
     for(let i=0;i<this.props.shownMap.length;i++){
       for(let j=0;j<this.props.shownMap[i].length;j++){
-        squares.push(<Square type={this.props.shownMap[i][j]} style={squareStyle} key={i+" "+j}/>)
+				let square=this.props.shownMap[i][j];
+				let type;
+				if(square.hasOwnProperty("occupied")){
+					if(square.occupied=="player")
+						type="player";
+					else
+						type=this.props.enemies[square.occupied].type;
+				} else {
+					type=square.type;
+				}
+        squares.push(<Square type={type} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
@@ -55,6 +66,14 @@ class Square extends React.Component{
   
 	componentWillReceiveProps(nextProps) {
 		this.setState({ type: nextProps.type });  
+	}
+	
+	handleKeyDown=(e)=>{
+		this.props.dispatch({
+			type:"KEYDOWN",
+			key:e.key,
+			id:"player"
+		})
 	}
 	
   render(){
@@ -88,7 +107,7 @@ class Square extends React.Component{
     
     
     return(
-      <div className="square" style={style}/>
+      <div className="square" style={style} onClick={this.handleClick}/>
     )
   }
 }

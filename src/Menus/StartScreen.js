@@ -10,28 +10,22 @@ let mapStateToProps=(state)=>{
 }
 
 let EntityInfo=(props)=>{
-	let bars=[];
-	let icon;
 	let entityIsPlayer=(props.entityId=="player")
 	let entityType=(entityIsPlayer)?"player":"enemy";
 	let entity;
 	if(entityIsPlayer){
 		entity=props.player;
-		bars.push(<Bar value={Math.floor(entity.exp/entity.lvl)+"%"} type="playerExp"/>);
-		icon="Portraits/Player.gif"
 	} else {
 		entity=props.enemies[props.entityId];
 	}
-	
 	let relativeHealth=Math.floor(entity.health/entity.maxHealth*100);
-	bars.push(<Bar value={relativeHealth+"%"} type={(entityIsPlayer)?"playerHealth":"enemyHealth"}/>);
-	
+	let relativeExp=Math.floor(entity.exp/entity.lvl)
 	console.log(entity)
 	return(
-		<div className={"info " + entityType}>
-			<img src={icon}/>
-			{bars}
-			
+		<div className={"entityInfo "+entityType+"Info"}>
+			<img/>
+			<Bar value={relativeExp+"%"}/>
+			<Bar value={relativeHealth+"%"}/>
 			<p>Atk:{entity.atk}</p>
 			<p>Def:{entity.def}</p>
 		</div>
@@ -40,7 +34,7 @@ let EntityInfo=(props)=>{
 
 let Bar=(props)=>{
 	return(
-		<div className={"bar "+props.type}>
+		<div className="bar playerHealth">
 			<span style={{width: props.value}}></span>
 		</div>
 	)

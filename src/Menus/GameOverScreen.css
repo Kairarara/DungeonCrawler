@@ -1,20 +1,29 @@
-.info{
+.playerInfo{
   height:45%;
+  background:pink;
+  width:15%;
+  position:absolute;
+  z-index:2;
+  top:20px;
+  left:20px;
+}
+
+.entityInfo{
+  height:45%;
+  background:blue;
   width:15%;
   position:absolute;
   z-index:2;
 }
 
-.enemy{
+.enemyInfo{
   top:20px;
 	right:20px;
-  background:#4a0000;
 }
 
-.player{
+.playerInfo{
   top:20px;
 	left:20px;
-  background:#006147;
 }
 
 .bar { 
@@ -38,9 +47,6 @@
 
 .playerHealth span{
   background-color: #2bc253;
-}
-.playerExp span{
-  background-color: #ffca45;
 }
 
 .enemyHealth span{

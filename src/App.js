@@ -230,16 +230,7 @@ let generateShownMap=(state, currentMapId=0)=>{
 		let newStrip=[]
 		for(let x=borders.left;x<=borders.right;x++){
 			let square=state.maps[currentMapId].land[y][x];
-			let type;
-			if(square.hasOwnProperty("occupied")){
-				if(square.occupied=="player")
-					type="player";
-				else
-					type=state.maps[currentMapId].enemies[square.occupied].type;
-			} else {
-				type=square.type;
-			}
-			newStrip.push(type);
+			newStrip.push(square);
 		}
 		shownMap.push(newStrip)
 	}
