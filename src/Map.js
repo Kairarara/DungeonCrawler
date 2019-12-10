@@ -20,6 +20,14 @@ class Map extends React.Component{
 		})
 	}
   
+	handleSquareClick=(id)=>{
+		if(id==null) return
+		this.props.dispatch({
+			type:"SHOWINFO",
+			id:id
+		})
+	}
+	
   render(){
     let squares=[];
 		let squareStyle={
@@ -36,10 +44,11 @@ class Map extends React.Component{
 						type="player";
 					else
 						type=this.props.enemies[square.occupied].type;
+					squares.push(<Square type={type} style={squareStyle} key={i+" "+j} onClick={()=>this.handleSquareClick(square.occupied)}/>)
 				} else {
 					type=square.type;
+					squares.push(<Square type={type} style={squareStyle} key={i+" "+j}/>)
 				}
-        squares.push(<Square type={type} style={squareStyle} key={i+" "+j}/>)
       }
     }
     let mapStyle={
@@ -66,14 +75,6 @@ class Square extends React.Component{
   
 	componentWillReceiveProps(nextProps) {
 		this.setState({ type: nextProps.type });  
-	}
-	
-	handleKeyDown=(e)=>{
-		this.props.dispatch({
-			type:"KEYDOWN",
-			key:e.key,
-			id:"player"
-		})
 	}
 	
   render(){
@@ -107,7 +108,7 @@ class Square extends React.Component{
     
     
     return(
-      <div className="square" style={style} onClick={this.handleClick}/>
+      <div className="square" style={style} onClick={this.props.onClick}/>
     )
   }
 }

@@ -300,7 +300,7 @@ function reducer(state=initializeState(), action) {
 
 	
 	switch (action.type){
-		case "KEYDOWN":
+		case "KEYDOWN":{
 			let maps=JSON.parse(JSON.stringify(state.maps));
 			let map=maps[state.currentMapId];
 			let entity;
@@ -399,14 +399,32 @@ function reducer(state=initializeState(), action) {
 			newState.shownMap=generateShownMap(newState);
 			
 			return newState;
-		case "NEWMAP":
-			return {
-				
+		}
+		case "SHOWINFO":{
+		
+			let newState={
+				gameState:state.gameState,
+				maps:state.maps,
+				squareSize:state.squareSize,
+				viewRange:state.viewRange,
+				currentMapId:state.currentMapId,
+				player:state.player,
+				shownMap:state.shownMap
 			}
-		case "":
-			return {
-				
+			return newState
+		}
+		case "":{
+			let newState={
+				gameState:state.gameState,
+				maps:state.maps,
+				squareSize:state.squareSize,
+				viewRange:state.viewRange,
+				currentMapId:state.currentMapId,
+				player:state.player,
+				shownMap:state.shownMap
 			}
+			return newState
+		}
 		default:
 			return state;
 	}
