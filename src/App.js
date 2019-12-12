@@ -3,7 +3,8 @@ import './App.css';
 import {createStore} from  'redux';
 import {Provider} from 'react-redux';
 import Map from './Map';
-import EntityInfo from './EntityInfo';
+import ShownEntities from './EntityInfo';
+import {connect} from 'react-redux';
 
 class Terrain{
 	constructor(type){
@@ -265,6 +266,7 @@ const initializeState=(mapW=30,mapH=30)=>{
 		squareSize:40,
 		viewRange:4,
 		currentMapId:0,
+		shownInfoId:null,
 		//player
 		//shownMap
 	};
@@ -394,14 +396,14 @@ function reducer(state=initializeState(), action) {
 				squareSize:state.squareSize,
 				viewRange:state.viewRange,
 				currentMapId:state.currentMapId,
-				player:(entityIsPlayer)?entity:state.player
+				player:(entityIsPlayer)?entity:state.player,
+				shownInfoId:state.shownInfoId
 			}
 			newState.shownMap=generateShownMap(newState);
 			
 			return newState;
 		}
 		case "SHOWINFO":{
-		
 			let newState={
 				gameState:state.gameState,
 				maps:state.maps,
@@ -409,7 +411,8 @@ function reducer(state=initializeState(), action) {
 				viewRange:state.viewRange,
 				currentMapId:state.currentMapId,
 				player:state.player,
-				shownMap:state.shownMap
+				shownMap:state.shownMap,
+				shownInfoId:action.id,
 			}
 			return newState
 		}
@@ -421,7 +424,8 @@ function reducer(state=initializeState(), action) {
 				viewRange:state.viewRange,
 				currentMapId:state.currentMapId,
 				player:state.player,
-				shownMap:state.shownMap
+				shownMap:state.shownMap,
+				shownInfoId:state.shownInfoId,
 			}
 			return newState
 		}
@@ -437,7 +441,7 @@ const store=createStore(reducer);
 const App =()=>(
 	<Provider store={store}>
 		<div className="app">
-			<EntityInfo entityId="player"/>
+			<ShownEntities/>
 			<Map/>
 		</div>
 	</Provider>

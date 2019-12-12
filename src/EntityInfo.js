@@ -3,37 +3,56 @@ import './EntityInfo.css';
 import {connect} from 'react-redux';
 
 let mapStateToProps=(state)=>{
-	return {
-		player:state.player,
-		enemies:state.maps[state.currentMapId].enemies
+	if(state.shownInfoId=="player"	||
+		state.shownInfoId==null		||
+		state.maps[state.currentMapId].enemies[state.shownInfoId]=="dead"){
+		return {player:state.player}
+	} else  {
+		return {
+			player:state.player,
+			enemy:state.maps[state.currentMapId].enemies[state.shownInfoId],
+		}
+	}
+}
+
+let ShownEntities=(props)=>{
+	if(props.enemy==null){
+		return(
+			<div className="infoContainer">
+				<EntityInfo entity={props.player} type="player"/>
+			</div>
+		)
+	} else {
+		return(
+			<div className="infoContainer">
+				<EntityInfo entity={props.player} type="player"/>
+				<EntityInfo entity={props.enemy} type="enemy"/>
+			</div>
+		)
 	}
 }
 
 let EntityInfo=(props)=>{
 	let bars=[];
 	let icon;
-	let entityIsPlayer=(props.entityId=="player")
-	let entityType=(entityIsPlayer)?"player":"enemy";
-	let entity;
+	console.log(props.entity)
+	let entityIsPlayer=(props.type=="player")
 	if(entityIsPlayer){
-		entity=props.player;
-		bars.push(<Bar value={Math.floor(entity.exp/entity.lvl)+"%"} type="playerExp"/>);
+		bars.push(<Bar value={Math.floor(props.entity.exp/props.entity.lvl)+"%"} type="playerExp"/>);
 		icon="Portraits/Player.gif"
 	} else {
-		entity=props.enemies[props.entityId];
 	}
 	
-	let relativeHealth=Math.floor(entity.health/entity.maxHealth*100);
+	let relativeHealth=Math.floor(props.entity.health/props.entity.maxHealth*100);
 	bars.push(<Bar value={relativeHealth+"%"} type={(entityIsPlayer)?"playerHealth":"enemyHealth"}/>);
 	
-	console.log(entity)
 	return(
-		<div className={"info " + entityType}>
+		<div className={"info " + props.type}>
 			<img src={icon}/>
 			{bars}
 			
-			<p>Atk:{entity.atk}</p>
-			<p>Def:{entity.def}</p>
+			<p>Atk:{props.entity.atk}</p>
+			<p>Def:{props.entity.def}</p>
 		</div>
 	)
 }
@@ -46,4 +65,4 @@ let Bar=(props)=>{
 	)
 }
 
-export default connect(mapStateToProps)(EntityInfo);
+export default connect(mapStateToProps)(ShownEntities);
