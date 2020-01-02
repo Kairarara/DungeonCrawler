@@ -6,6 +6,88 @@ import Map from './Map';
 import ShownEntities from './EntityInfo';
 import {connect} from 'react-redux';
 
+
+//---------------------------------------------------------------------------------------------------------------------------
+let pathFinder=(land,start,end,maxDistance)=>{
+	let map=JSON.parse(JSON.stringify(land));
+	
+	map[start.y][start.x].prev="start";
+	let borderSquares=[start]
+	
+	let reversePath=(ele)=>{
+		let path=[];
+		path.push(map[ele.y][ele.x].prev);
+	
+		let y=path[path.length-1].y;
+		let x=path[path.length-1].x;
+		let i=0;
+		while(map[y][x].prev!=="start"&&i<maxDistance){
+			i++;
+			path.push(map[y][x].prev);
+			y=path[path.length-1].y;
+			x=path[path.length-1].x;
+		}
+		if(i>=maxDistance){
+			throw "Path is longer than max distance"
+		}
+		return path;
+	}
+	
+	
+	for(let i=0;i<maxDistance;i++){
+		let newBorders=[];
+		for(let i=0;i<borderSquares.length;i++){
+			let ele=borderSquares[i]
+			if(ele.y+1<map.length && !map[ele.y+1][ele.x].hasOwnProperty("prev")){
+				map[ele.y+1][ele.x].prev=ele;
+				if((ele.y+1)==end.y && ele.x==end.x){
+					return reversePath({y:ele.y+1, x:ele.x});
+				}
+				
+				newBorders.push({y:ele.y+1, x:ele.x});
+			}
+			if(ele.y-1>=0 && !map[ele.y-1][ele.x].hasOwnProperty("prev")){
+				map[ele.y-1][ele.x].prev=ele;
+				
+				if((ele.y-1)==end.y && ele.x==end.x){
+					return reversePath({y:ele.y-1, x:ele.x});
+				}
+				
+				newBorders.push({y:ele.y-1, x:ele.x});
+			}
+			if(ele.x+1<map[0].length && !map[ele.y][ele.x+1].hasOwnProperty("prev")){
+				map[ele.y][ele.x+1].prev=ele;
+				
+				if(ele.y==end.y && ele.x+1==end.x){
+					return reversePath({y:ele.y, x:ele.x+1});
+				}
+				
+				newBorders.push({y:ele.y, x:ele.x+1});
+			}
+			if(ele.x-1>=0 && !map[ele.y][ele.x-1].hasOwnProperty("prev")){
+				map[ele.y][ele.x-1].prev=ele;
+				
+				if(ele.y==end.y && (ele.x-1)==end.x){
+					return reversePath({y:ele.y, x:ele.x-1});
+				}
+				
+				newBorders.push({y:ele.y, x:ele.x-1});
+			}
+		}
+		borderSquares=newBorders;
+	}
+	
+	console.log("not found");	
+	return "not found";	
+	
+}
+//---------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 class Terrain{
 	constructor(type){
 		this.type=type;
@@ -70,6 +152,13 @@ let createValley=(mapH=20, mapW=20)=>{
   }
   
   return land;
+}
+
+let pathIsPossible=(map,e1,e2)=>{
+	let isPossible=false;
+	//Breadth First Search 
+	return isPossible;
+  
 }
 
 /*
@@ -310,11 +399,13 @@ function reducer(state=initializeState(), action) {
 			if(entityIsPlayer){
 				entity=Object.assign({},state.player)
 			} else {
-				entity=map.entities[action.id];
+				entity=map.enemies[action.id];
 			}
 			
 			let newX=entity.coords.x;
 			let newY=entity.coords.y;
+			
+			console.log(pathFinder(map.land,entity.coords,map.enemies[1].coords,100));
 			switch(action.key){
 				case 'ArrowLeft':
 					if(newX<=0) return state;
@@ -446,5 +537,12 @@ const App =()=>(
 		</div>
 	</Provider>
 )
+
+
+
+
+
+
+
 
 export default App;
