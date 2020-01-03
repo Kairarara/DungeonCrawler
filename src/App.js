@@ -7,10 +7,8 @@ import ShownEntities from './EntityInfo';
 import {connect} from 'react-redux';
 
 
-//---------------------------------------------------------------------------------------------------------------------------
 let pathFinder=(land,start,end,maxDistance)=>{
 	let map=JSON.parse(JSON.stringify(land));
-	
 	map[end.y][end.x].prev="end";
 	let borderSquares=[end]
 	
@@ -93,13 +91,9 @@ let pathFinder=(land,start,end,maxDistance)=>{
 		borderSquares=newBorders;
 	}
 	
-	return "not found";	
+	return false;	
 	
 }
-//---------------------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 
@@ -344,56 +338,68 @@ let generateShownMap=(state, currentMapId=0)=>{
 }
 
 const initializeState=(mapW=30,mapH=30)=>{
-	let playerStats={
-		exp:0,
-		lvl:1,
-		maxHealth:100,
-		health:100,
-		atk:10,
-		def:10
-	}
+	let foundPath=false;
+	let initialState;
 	
-	let enemyNumbers=[
-		{
-			quantity:5,
-			type:"ogre"
-		},
-		{
-			quantity:5,
-			type:"goblin"
-		},
-	]
-	
-	let initialState={
-		gameState:"playing",
-		maps:[generateMap("valley", mapH, mapW, enemyNumbers)],
-		squareSize:40,
-		viewRange:4,
-		currentMapId:0,
-		shownInfoId:null,
-		//player
-		//shownMap
-	};
-	
-	let generateCoords=(recursiveCounter=0)=>{
-		let map=initialState.maps[0];
-		let coords={
-			x:Math.floor(Math.random()*(map.land[0].length)),
-			y:Math.floor(Math.random()*(map.land.length))
-		};
-		
-		if(map.land[coords.y][coords.x].canMoveThrough && !(map.land[coords.y][coords.x].hasOwnProperty("occupied"))){
-			return coords
-		} else {
-			if(recursiveCounter<50)
-				return generateCoords(recursiveCounter+1);
-			else
-				throw "could not generate coordinates"
+	while(!foundPath){			//we check that every enemy is reachable by the player
+		let player={
+			exp:0,
+			lvl:1,
+			maxHealth:100,
+			health:100,
+			atk:10,
+			def:10
 		}
+		
+		let enemyNumbers=[
+			{
+				quantity:5,
+				type:"ogre"
+			},
+			{
+				quantity:5,
+				type:"goblin"
+			},
+		];
+		
+		let map=generateMap("valley", mapH, mapW, enemyNumbers);
+		
+		
+		
+		let generateCoords=(recursiveCounter=0)=>{
+			let coords={
+				x:Math.floor(Math.random()*(map.land[0].length)),
+				y:Math.floor(Math.random()*(map.land.length))
+			};
+			
+			if(map.land[coords.y][coords.x].canMoveThrough && !(map.land[coords.y][coords.x].hasOwnProperty("occupied"))){
+				return coords
+			} else {
+				if(recursiveCounter<50)
+					return generateCoords(recursiveCounter+1);
+				else
+					throw "could not generate coordinates"
+			}
+		}	
+		
+		player.coords=generateCoords();
+		
+		for(let i=0;i<map.enemies.length;i++){
+			foundPath=pathFinder(map.land, player.coords, map.enemies[i].coords, mapH*mapW/2);
+			if(foundPath===false) break;
+		}
+		
+		initialState={
+			gameState:"playing",
+			maps:[map],
+			squareSize:40,
+			viewRange:4,
+			currentMapId:0,
+			shownInfoId:null,
+			player:player,
+			//shownMap
+		};
 	}
-	
-	initialState.player=playerStats;
-	initialState.player.coords=generateCoords();
 	
 	initialState.maps[0].land[initialState.player.coords.y][initialState.player.coords.x].occupied="player";
 	
@@ -403,7 +409,6 @@ const initializeState=(mapW=30,mapH=30)=>{
 }
 
 function reducer(state=initializeState(), action) {
-
 	
 	switch (action.type){
 		case "KEYDOWN":{
