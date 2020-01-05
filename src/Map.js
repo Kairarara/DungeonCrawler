@@ -6,18 +6,25 @@ let mapStateToProps=(state)=>{
 	return {
 		squareSize:state.squareSize,
 		shownMap:state.shownMap,
-		enemies:state.maps[state.currentMapId].enemies
+		enemies:state.maps[state.currentMapId].enemies,
+		movementEnabled:state.movementEnabled
 	}
 }
 
 class Map extends React.Component{
 
 	handleKeyDown=(e)=>{
-		this.props.dispatch({
-			type:"KEYDOWN",
-			key:e.key,
-			id:"player"
-		})
+		if(this.props.movementEnabled){
+			this.props.dispatch({
+				type:"KEYDOWN",
+				key:e.key,
+				id:"player"
+			})
+			setTimeout(()=>this.props.dispatch({
+				type:"ENEMYTURN",
+			}), 100);
+		}
+		
 	}
   
 	handleSquareClick=(id)=>{
@@ -43,7 +50,6 @@ class Map extends React.Component{
 					if(square.occupied=="player"){
 						type="player";
 					} else {
-						console.log(square)
 						type=this.props.enemies[square.occupied].type;
 					}
 					squares.push(<Square type={type} style={squareStyle} key={i+" "+j} onClick={()=>this.handleSquareClick(square.occupied)}/>)
