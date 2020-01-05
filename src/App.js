@@ -6,6 +6,7 @@ import Map from './Map';
 import ShownEntities from './EntityInfo';
 import {connect} from 'react-redux';
 
+//app crashes when player and enemies move in the same square in the same turn
 
 let pathFinder=(land,start,end,maxDistance)=>{
 	let map=JSON.parse(JSON.stringify(land));
@@ -21,19 +22,19 @@ let pathFinder=(land,start,end,maxDistance)=>{
 		let y=ele.y;
 		while(map[y][x].prev!=="end"&&i<maxDistance){
 			switch(path[path.length-1]){
-				case "down":{
+				case "ArrowDown":{
 					y++;
 					break;
 				}
-				case "left":{
+				case "ArrowLeft":{
 					x--;
 					break;
 				}
-				case "up":{
+				case "ArrowUp":{
 					y--;
 					break;
 				}
-				case "right":{
+				case "ArrowRight":{
 					x++;
 					break;
 				}
@@ -41,7 +42,7 @@ let pathFinder=(land,start,end,maxDistance)=>{
 			i++;
 			path.push(map[y][x].prev);
 		}
-		if(i>=maxDistance){
+		if(i>maxDistance){
 			throw "Path is longer than max distance"
 		}
 		return path;
@@ -53,7 +54,7 @@ let pathFinder=(land,start,end,maxDistance)=>{
 		for(let i=0;i<borderSquares.length;i++){
 			let ele=borderSquares[i]
 			if(ele.y+1<map.length && !map[ele.y+1][ele.x].hasOwnProperty("prev") && map[ele.y+1][ele.x].canMoveThrough){
-				map[ele.y+1][ele.x].prev="up";
+				map[ele.y+1][ele.x].prev="ArrowUp";
 				if((ele.y+1)==start.y && ele.x==start.x){
 					return getPath(start);
 				}
@@ -61,7 +62,7 @@ let pathFinder=(land,start,end,maxDistance)=>{
 				newBorders.push({y:ele.y+1, x:ele.x});
 			}
 			if(ele.y-1>=0 && !map[ele.y-1][ele.x].hasOwnProperty("prev") && map[ele.y-1][ele.x].canMoveThrough){
-				map[ele.y-1][ele.x].prev="down";
+				map[ele.y-1][ele.x].prev="ArrowDown";
 				
 				if((ele.y-1)==start.y && ele.x==start.x){
 					return getPath(start);
@@ -70,7 +71,7 @@ let pathFinder=(land,start,end,maxDistance)=>{
 				newBorders.push({y:ele.y-1, x:ele.x});
 			}
 			if(ele.x+1<map[0].length && !map[ele.y][ele.x+1].hasOwnProperty("prev") && map[ele.y][ele.x+1].canMoveThrough){
-				map[ele.y][ele.x+1].prev="left";
+				map[ele.y][ele.x+1].prev="ArrowLeft";
 				
 				if(ele.y==start.y && ele.x+1==start.x){
 					return getPath(start);
@@ -79,7 +80,7 @@ let pathFinder=(land,start,end,maxDistance)=>{
 				newBorders.push({y:ele.y, x:ele.x+1});
 			}
 			if(ele.x-1>=0 && !map[ele.y][ele.x-1].hasOwnProperty("prev") && map[ele.y][ele.x-1].canMoveThrough){
-				map[ele.y][ele.x-1].prev="right";
+				map[ele.y][ele.x-1].prev="ArrowRight";
 				
 				if(ele.y==start.y && (ele.x-1)==start.x){
 					return getPath(start);
@@ -348,7 +349,8 @@ const initializeState=(mapW=30,mapH=30)=>{
 			maxHealth:100,
 			health:100,
 			atk:10,
-			def:10
+			def:10,
+			id:"player",
 		}
 		
 		let enemyNumbers=[
@@ -412,93 +414,135 @@ function reducer(state=initializeState(), action) {
 	
 	switch (action.type){
 		case "KEYDOWN":{
+			let newGameState=state.gameState;
 			let maps=JSON.parse(JSON.stringify(state.maps));
 			let map=maps[state.currentMapId];
-			let entity;
-			let entityIsPlayer=(action.id=="player")
-			if(entityIsPlayer){
-				entity=Object.assign({},state.player)
-			} else {
-				entity=map.enemies[action.id];
-			}
-			
-			let newX=entity.coords.x;
-			let newY=entity.coords.y;
-			
-			switch(action.key){
-				case 'ArrowLeft':
-					if(newX<=0) return state;
-					newX--;
-					break;
-				case 'ArrowUp':
-					if(newY<=0) return state;
-					newY--;
-					break;
-				case 'ArrowRight':
-					if(newX>=map.land[0].length-1) return state;
-					newX++;
-					break;
-				case 'ArrowDown':
-					if(newY>=map.land.length-1) return state;
-					newY++;
-					break;
-				default:
-					return state;
-			}
-			
-			
-			if(!map.land[newY][newX].canMoveThrough) return state;
-			
-			let newGameState=state.gameState;
-			
-			let battle=(entity,enemy)=>{
-				let health=entity.health;
-				let enemyHealth=enemy.health;
-				let dmg1=entity.atk-enemy.def;
-				if(dmg1<0) dmg1=0;
-				let dmg2=enemy.atk-entity.def;
-				if(dmg2<0) dmg2=0;
-				while(health>0){
-					enemyHealth-=dmg1;
-					if(enemyHealth>0){
-						health-=dmg2;
-					} else {
-						return health;
-					}
+			let newPlayer=Object.assign({},state.player);
+			let moveEntity=(entity,key)=>{
+				let newX=entity.coords.x;
+				let newY=entity.coords.y;
+				
+				switch(key){
+					case 'ArrowLeft':
+						if(newX<=0) return state;
+						newX--;
+						break;
+					case 'ArrowUp':
+						if(newY<=0) return state;
+						newY--;
+						break;
+					case 'ArrowRight':
+						if(newX>=map.land[0].length-1) return state;
+						newX++;
+						break;
+					case 'ArrowDown':
+						if(newY>=map.land.length-1) return state;
+						newY++;
+						break;
+					default:
+						return state;
 				}
-				return "loss";
-			}
-			
-			
-			if(map.land[newY][newX].hasOwnProperty("occupied")){
-				let adversaryId=map.land[newY][newX].occupied;
-				let result=battle(entity, map.enemies[adversaryId]);
-				if((result=="loss" && entityIsPlayer) || (result!="loss" && !entityIsPlayer)){
-					newGameState="Game Over";
-					return state; //to remove and to add a game over screen
-				} else {
-					entity.health=result;
-					if(entityIsPlayer){
-						entity.exp+=map.enemies[adversaryId].expBounty;
-						let expCap=entity.lvl*100;
-						while(entity.exp>expCap){
-							entity.exp-=expCap;
-							entity.lvl++;
-							entity.atk++;
-							entity.def++;
-							expCap+=100;
+				
+				
+				if(!map.land[newY][newX].canMoveThrough) return state;
+				
+				
+				let battle=(entity,enemy)=>{
+					let health=entity.health;
+					let enemyHealth=enemy.health;
+					let dmg1=entity.atk-enemy.def;
+					if(dmg1<0) dmg1=0;
+					let dmg2=enemy.atk-entity.def;
+					if(dmg2<0) dmg2=0;
+					
+					let result;
+					while(health>0){
+						enemyHealth-=dmg1;
+						if(enemyHealth>0){
+							health-=dmg2;
+						} else {
+							return {
+								won:true,
+								health:health,
+								enemyHealth:0
+							};
 						}
 					}
-					map.enemies[adversaryId]="dead";
-					delete map.land[newY][newX].occupied;
+					return {
+						won:false,
+						health:0,
+						enemyHealth:enemyHealth
+					};
 				}
-			}
+				
+				
+				if(map.land[newY][newX].hasOwnProperty("occupied")){
+					let adversary;
+					
+							console.log(entity)
+					let adversaryId=map.land[newY][newX].occupied;
+					if(adversaryId=="player"){
+						adversary=newPlayer;
+					} else {
+						adversary=map.enemies[adversaryId];
+					}
+					let result=battle(entity, adversary);
+					if((!result.won && entity.id=="player") || (result.won && adversary.id=="player")){
+						newGameState="Game Over";
+						return state; //to remove and to add a game over screen
+					} else {
+						if(entity.id=="player"){
+							entity.health=result.health;
+							entity.exp+=map.enemies[adversary.id].expBounty;
+							let expCap=entity.lvl*100;
+							while(entity.exp>expCap){
+								entity.exp-=expCap;
+								entity.lvl++;
+								entity.atk++;
+								entity.def++;
+								expCap+=100;
+							}
+							map.enemies[adversary.id]="dead";
+							
+							map.land[newY][newX].occupied=map.land[entity.coords.y][entity.coords.x].occupied;
+							delete map.land[entity.coords.y][entity.coords.x].occupied;
+							
+							entity.coords.x=newX;
+							entity.coords.y=newY;
+							
+						} else {
+							adversary.health=result.enemyHealth;
+							adversary.exp+=map.enemies[entity.id].expBounty;
+							let expCap=adversary.lvl*100;
+							while(adversary.exp>expCap){
+								adversary.exp-=expCap;
+								adversary.lvl++;
+								adversary.atk++;
+								adversary.def++;
+								expCap+=100;
+							}
+							map.enemies[entity.id]="dead";
+							delete map.land[entity.coords.y][entity.coords.x].occupied;
+						}
+					}
+				} else {
+					map.land[newY][newX].occupied=map.land[entity.coords.y][entity.coords.x].occupied;
+					delete map.land[entity.coords.y][entity.coords.x].occupied;
+					
+					entity.coords.x=newX;
+					entity.coords.y=newY;
+				}
+			};
 			
-			map.land[newY][newX].occupied=map.land[entity.coords.y][entity.coords.x].occupied;
-			delete map.land[entity.coords.y][entity.coords.x].occupied;
-			
-			entity.coords.x=newX;
-			entity.coords.y=newY;
+			moveEntity(newPlayer,action.key);
+			map.enemies.forEach((enemy)=>{
+				if(enemy!=="dead"){
+					let path=pathFinder(map.land,enemy.coords,newPlayer.coords,5);
+					if(path){
+						moveEntity(enemy,path[0]);
+					}
+				}
+			})
 			
 			let newState={
 				gameState:newGameState,
@@ -506,7 +550,7 @@ function reducer(state=initializeState(), action) {
 				squareSize:state.squareSize,
 				viewRange:state.viewRange,
 				currentMapId:state.currentMapId,
-				player:(entityIsPlayer)?entity:state.player,
+				player:newPlayer,
 				shownInfoId:state.shownInfoId
 			}
 			newState.shownMap=generateShownMap(newState);
@@ -552,7 +596,7 @@ const App =()=>(
 	<Provider store={store}>
 		<div className="app">
 			<ShownEntities/>
-			<Map/>
+			<Map autofocus/>
 		</div>
 	</Provider>
 )

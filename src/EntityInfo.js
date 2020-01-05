@@ -35,7 +35,6 @@ let ShownEntities=(props)=>{
 let EntityInfo=(props)=>{
 	let bars=[];
 	let icon;
-	console.log(props.entity)
 	let entityIsPlayer=(props.type=="player")
 	if(entityIsPlayer){
 		bars.push(<Bar value={Math.floor(props.entity.exp/props.entity.lvl)+"%"} type="playerExp"/>);

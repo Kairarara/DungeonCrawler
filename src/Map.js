@@ -40,10 +40,12 @@ class Map extends React.Component{
 				let square=this.props.shownMap[i][j];
 				let type;
 				if(square.hasOwnProperty("occupied")){
-					if(square.occupied=="player")
+					if(square.occupied=="player"){
 						type="player";
-					else
+					} else {
+						console.log(square)
 						type=this.props.enemies[square.occupied].type;
+					}
 					squares.push(<Square type={type} style={squareStyle} key={i+" "+j} onClick={()=>this.handleSquareClick(square.occupied)}/>)
 				} else {
 					type=square.type;
@@ -58,7 +60,7 @@ class Map extends React.Component{
     };
 		
     return(
-      <div className="map" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown}>
+      <div className="map" style={mapStyle} tabIndex="0"  onKeyDown={this.handleKeyDown} autofocus>
         {squares}
       </div>
     )
