@@ -6,6 +6,14 @@ import Map from './Map';
 import ShownEntities from './EntityInfo';
 import {connect} from 'react-redux';
 
+/*css improvements todo:
+	animate bars filling and emptying
+	EnemyInfo  should diplay enemy type
+	bars should display the value they rapresent
+	Choose a better font
+	!!! Enemy type should be shown on shownMap !!!
+*/
+
 let pathFinder=(land,start,end,maxDistance)=>{
 	let map=JSON.parse(JSON.stringify(land));
 	map[end.y][end.x].prev="end";
@@ -51,39 +59,37 @@ let pathFinder=(land,start,end,maxDistance)=>{
 		let newBorders=[];
 		for(let i=0;i<borderSquares.length;i++){
 			let ele=borderSquares[i]
-			if(ele.y+1<map.length && !map[ele.y+1][ele.x].hasOwnProperty("prev") && map[ele.y+1][ele.x].canMoveThrough){
+			if((ele.y+1)==start.y && ele.x==start.x){
 				map[ele.y+1][ele.x].prev="ArrowUp";
-				if((ele.y+1)==start.y && ele.x==start.x){
-					return getPath(start);
-				}
-				
+				return getPath(start);
+			}
+			if((ele.y-1)==start.y && ele.x==start.x){
+				map[ele.y-1][ele.x].prev="ArrowDown";
+				return getPath(start);
+			}
+			if(ele.y==start.y && ele.x+1==start.x){
+				map[ele.y][ele.x+1].prev="ArrowLeft";
+				return getPath(start);
+			}
+			if(ele.y==start.y && (ele.x-1)==start.x){
+				map[ele.y][ele.x-1].prev="ArrowRight";
+				return getPath(start);
+			}
+			
+			if(ele.y+1<map.length && !map[ele.y+1][ele.x].hasOwnProperty("prev") && map[ele.y+1][ele.x].canMoveThrough && !map[ele.y+1][ele.x].hasOwnProperty("occupied")){
+				map[ele.y+1][ele.x].prev="ArrowUp";
 				newBorders.push({y:ele.y+1, x:ele.x});
 			}
-			if(ele.y-1>=0 && !map[ele.y-1][ele.x].hasOwnProperty("prev") && map[ele.y-1][ele.x].canMoveThrough){
+			if(ele.y-1>=0 && !map[ele.y-1][ele.x].hasOwnProperty("prev") && map[ele.y-1][ele.x].canMoveThrough && !map[ele.y-1][ele.x].hasOwnProperty("occupied")){
 				map[ele.y-1][ele.x].prev="ArrowDown";
-				
-				if((ele.y-1)==start.y && ele.x==start.x){
-					return getPath(start);
-				}
-				
 				newBorders.push({y:ele.y-1, x:ele.x});
 			}
-			if(ele.x+1<map[0].length && !map[ele.y][ele.x+1].hasOwnProperty("prev") && map[ele.y][ele.x+1].canMoveThrough){
+			if(ele.x+1<map[0].length && !map[ele.y][ele.x+1].hasOwnProperty("prev") && map[ele.y][ele.x+1].canMoveThrough && !map[ele.y][ele.x+1].hasOwnProperty("occupied")){
 				map[ele.y][ele.x+1].prev="ArrowLeft";
-				
-				if(ele.y==start.y && ele.x+1==start.x){
-					return getPath(start);
-				}
-				
 				newBorders.push({y:ele.y, x:ele.x+1});
 			}
-			if(ele.x-1>=0 && !map[ele.y][ele.x-1].hasOwnProperty("prev") && map[ele.y][ele.x-1].canMoveThrough){
+			if(ele.x-1>=0 && !map[ele.y][ele.x-1].hasOwnProperty("prev") && map[ele.y][ele.x-1].canMoveThrough && !map[ele.y][ele.x-1].hasOwnProperty("occupied")){
 				map[ele.y][ele.x-1].prev="ArrowRight";
-				
-				if(ele.y==start.y && (ele.x-1)==start.x){
-					return getPath(start);
-				}
-				
 				newBorders.push({y:ele.y, x:ele.x-1});
 			}
 		}
@@ -94,8 +100,6 @@ let pathFinder=(land,start,end,maxDistance)=>{
 	
 }
 
-
-
 class Terrain{
 	constructor(type){
 		this.type=type;
@@ -105,8 +109,6 @@ class Terrain{
 				this.canMoveThrough=true;
 				break;
 			case "rock":
-			case "player":
-			case "enemy":
 				this.canMoveThrough=false;
 				break;
 			default:
@@ -162,71 +164,19 @@ let createValley=(mapH=20, mapW=20)=>{
   return land;
 }
 
-let pathIsPossible=(map,e1,e2)=>{
-	let isPossible=false;
-	//Breadth First Search 
-	return isPossible;
-  
-}
-
-/*
-let createDungeon=(mapH=10, mapW=10, nOfTunnels=10, maxL=5, turns=5)=>{
-  let map=[];
-  for(let i=0; i<mapH; i++){
-    map.push(new Array(mapW).fill("rock"))
-  }
-  
-  
-  let createTunnel=(startL, startW, maxL, turns)=>{
-    let l=startL, w=startW;
-    for(let i=0;i<turns;i++){
-      let x=0, y=0;
-      switch(Math.floor(Math.random()*4)){
-        case 0:
-          y=1;
-          break;
-        case 1:
-          x=1;
-          break;
-        case 2:
-          y=-1;
-          break;
-        case 3:
-          x=-1;
-          break;
-				
-      }
-      let length=Math.floor(Math.random()*maxL)+1;
-      
-      for(let i=0;i<length;i++){
-        l+=y;
-        w+=x;
-        map[l][w]="ground";
-      }
-    }
-  }
-  let startL=mapH/2-1;
-  let startW=mapW/2-1;
-  map[startL][startW]=1;
-  createTunnel(startL, startW, maxL, turns);
-  
-  return map;
-}
-*/
-
 let generateMap=(landType="valley", mapH=20, mapW=20, enemyNumbers)=>{
 	const enemyStats={
-		ogre:{
-			maxHealth:100,
-			health:100,
+		automaton:{
+			maxHealth:150,
+			health:150,
 			atk:11,
-			def:2,
+			def:4,
 			expBounty:60
 		},
-		goblin:{
+		ghoul:{
 			maxHealth:100,
 			health:100,
-			atk:11,
+			atk:12,
 			def:2,
 			expBounty:60
 		}
@@ -354,11 +304,11 @@ const initializeState=(mapW=30,mapH=30)=>{
 		let enemyNumbers=[
 			{
 				quantity:5,
-				type:"ogre"
+				type:"automaton"
 			},
 			{
 				quantity:5,
-				type:"goblin"
+				type:"ghoul"
 			},
 		];
 		

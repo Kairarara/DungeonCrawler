@@ -14,7 +14,8 @@ let mapStateToProps=(state)=>{
 class Map extends React.Component{
 
 	handleKeyDown=(e)=>{
-		if(this.props.movementEnabled){
+		if(this.props.movementEnabled&&
+		(e.key=="ArrowLeft"||e.key=="ArrowUp"||e.key=="ArrowDown"||e.key=="ArrowRight")){
 			this.props.dispatch({
 				type:"KEYDOWN",
 				key:e.key,
@@ -97,13 +98,14 @@ class Square extends React.Component{
       case "rock":
         color="#5c4e29"
         break;
-			case "player":
-				color="#4287f5";
-				break;
-			case "goblin":
-			case "ogre":
-				color="#b51616";
-				break;
+	case "player":
+		color="#4287f5";
+		break;
+	case "ghoul":
+	case "automaton":
+	case "dryad":
+		color="#b51616";
+		break;
       default:
         color="#000000"
     }

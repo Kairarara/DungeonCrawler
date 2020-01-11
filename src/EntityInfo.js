@@ -19,14 +19,14 @@ let ShownEntities=(props)=>{
 	if(props.enemy==null){
 		return(
 			<div className="infoContainer">
-				<EntityInfo entity={props.player} type="player"/>
+				<EntityInfo entity={props.player} type="player" group="player"/>
 			</div>
 		)
 	} else {
 		return(
 			<div className="infoContainer">
-				<EntityInfo entity={props.player} type="player"/>
-				<EntityInfo entity={props.enemy} type="enemy"/>
+				<EntityInfo entity={props.player} type="player" group="player"/>
+				<EntityInfo entity={props.enemy} type={props.enemy.type} group="enemy"/>
 			</div>
 		)
 	}
@@ -34,20 +34,18 @@ let ShownEntities=(props)=>{
 
 let EntityInfo=(props)=>{
 	let bars=[];
-	let icon;
+	let icon="Portraits/"+props.type+".gif";
 	let entityIsPlayer=(props.type=="player")
 	if(entityIsPlayer){
 		bars.push(<Bar value={Math.floor(props.entity.exp/props.entity.lvl)+"%"} type="playerExp"/>);
-		icon="Portraits/Player.gif"
-	} else {
 	}
 	
 	let relativeHealth=Math.floor(props.entity.health/props.entity.maxHealth*100);
 	bars.push(<Bar value={relativeHealth+"%"} type={(entityIsPlayer)?"playerHealth":"enemyHealth"}/>);
 	
 	return(
-		<div className={"info " + props.type}>
-			<img src={icon}/>
+		<div className={"info " + props.group}>
+			<img className="icon" src={icon}/>
 			{bars}
 			
 			<p>Atk:{props.entity.atk}</p>
