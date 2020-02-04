@@ -1,7 +1,6 @@
 {
   "homepage": "http://Kairarara.github.io/DungeonCrawler",
   "name": "dungeon-crawler",
-  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "gh-pages": "^2.1.1",
