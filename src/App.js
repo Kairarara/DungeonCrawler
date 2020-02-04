@@ -4,14 +4,11 @@ import { createStore } from "redux";
 import { Provider } from "react-redux";
 import Map from "./Map";
 import ShownEntities from "./EntityInfo";
-import GameOverScreen from "./GameOverScreen";
+import EndScreen from "./EndScreen";
 import { connect } from "react-redux";
 
-/*css improvements todo:
-	animate bars filling and emptying
-	EnemyInfo  should diplay enemy type
-	needs a gameover screen
-	add a color blind mode
+/*TODO:
+  
 */
 
 let pathFinder = (land, start, end, maxDistance) => {
@@ -137,6 +134,7 @@ class Terrain {
 
 let createValley = (mapH = 20, mapW = 20) => {
   let land = [];
+  //initialize valley as having only grass terrain
   for (let i = 0; i < mapH; i++) {
     let newStrip = [];
     for (let j = 0; j < mapW; j++) {
@@ -144,26 +142,28 @@ let createValley = (mapH = 20, mapW = 20) => {
     }
     land.push(newStrip);
   }
-
-  function wall(i, j, chance) {
-    if (i < 0 || j < 0 || i >= mapH || j >= mapW) return 0;
-    if (land[i][j].type === "grass") {
-      if (Math.floor(Math.random() * chance) < 10) {
-        land[i][j] = new Terrain("rock");
-        return true;
+  //!!IMPORTANT!! THIS FUNCTION MODIFIES THE LAND ARRAY
+  let growWall = (i, j, chance = 100) => {
+    let wall = (i, j, chance) => {
+      if (i < 0 || j < 0 || i >= mapH || j >= mapW) return false;
+      if (land[i][j].type === "grass") {
+        if (Math.floor(Math.random() * 100) < chance) {
+          land[i][j] = new Terrain("rock");
+          return true;
+        }
       }
-    }
-    return false;
-  }
+      return false;
+    };
 
-  function growWall(i, j, chance = 10) {
-    let mod = 20; //the bigger this value is the smaller the wall clusters are
-    if (wall(i - 1, j, chance)) growWall(i - 1, j, chance + mod);
-    if (wall(i + 1, j, chance)) growWall(i + 1, j, chance + mod);
-    if (wall(i, j - 1, chance)) growWall(i, j - 1, chance + mod);
-    if (wall(i, j + 1, chance)) growWall(i, j + 1, chance + mod);
-  }
+    let reducedChance = chance-30;
+    if (wall(i - 1, j, chance)) growWall(i - 1, j, reducedChance);
+    if (wall(i + 1, j, chance)) growWall(i + 1, j, reducedChance);
+    if (wall(i, j - 1, chance)) growWall(i, j - 1, reducedChance);
+    if (wall(i, j + 1, chance)) growWall(i, j + 1, reducedChance);
+  };
 
+
+  //generate rock clusters
   for (let i = 0; i < mapH; i++) {
     for (let j = 0; j < mapW; j++) {
       if (Math.floor(Math.random() * 40) === 0) {
@@ -190,14 +190,14 @@ let generateMap = (landType = "valley", mapH = 20, mapW = 20, enemyNumbers) => {
       health: 100,
       atk: 12,
       def: 2,
-      expBounty: 60
+      expBounty: 70
     },
     dryad: {
       maxHealth: 70,
       health: 70,
-      atk: 15,
+      atk: 14,
       def: 0,
-      expBounty: 60
+      expBounty: 80
     }
   };
 
@@ -325,11 +325,11 @@ const initializeState = (mapW = 30, mapH = 30) => {
 
     let enemyNumbers = [
       {
-        quantity: 5,
+        quantity: 7,
         type: "automaton"
       },
       {
-        quantity: 5,
+        quantity: 6,
         type: "ghoul"
       },
       {
@@ -392,6 +392,15 @@ const initializeState = (mapW = 30, mapH = 30) => {
 };
 
 function reducer(state = initializeState(), action) {
+  /*
+    @params:  the map, including enemies data
+              the moving entity
+              the key pressed (or simulated) to move the entity
+              newPlayer is needed if entity is not the player to allow for a battle, 
+                as the playier is not included in the map parameter
+
+    @return:  gamestate, can be "playing", "Game Over" or "Victory"
+  */
   let moveEntity = (map, entity, key, newPlayer) => {
     let newX = entity.coords.x;
     let newY = entity.coords.y;
@@ -499,6 +508,10 @@ function reducer(state = initializeState(), action) {
           map.enemies[entity.id] = "dead";
           delete map.land[entity.coords.y][entity.coords.x].occupied;
         }
+        for (let enemy of map.enemies) {
+          if (enemy !== "dead") return "playing";
+        }
+        return "Victory";
       }
     } else {
       map.land[newY][newX].occupied =
@@ -605,7 +618,7 @@ const store = createStore(reducer);
 const App = () => (
   <Provider store={store}>
     <div className="app">
-      <GameOverScreen />
+      <EndScreen />
       <ShownEntities />
       <Map />
     </div>
