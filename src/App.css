@@ -2,28 +2,30 @@
   http://www.videogamesprites.net/FinalFantasyTactics/Party/
 */
 
-html{
-  height:100%;
-  width:100%;
+html {
+  height: 100%;
+  width: 100%;
 }
 
 body {
-  height:100%;
-  width:100%;
-  margin:0;
+  height: 100%;
+  width: 100%;
+  margin: 0;
 }
 
-#root{
-  height:100%;
-  width:100%;
+#root {
+  height: 100%;
+  width: 100%;
 }
 
-.app{
-  height:100%;
-  width:100%;
-  background:#383838;
-	padding:auto;
-	display:flex;
-	justify-content:center;
-	align-content:center;
+.app {
+  height: 100%;
+  width: 100%;
+  background: #383838;
+  padding: auto;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  color: white;
+  font-family: sans-serif, Helvetica, arial;
 }
