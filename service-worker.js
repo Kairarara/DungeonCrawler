@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/DungeonCrawler/precache-manifest.c43e8f6f07c4fbdd247bac7612baebcc.js"
+  "/DungeonCrawler/precache-manifest.39b2ca7a4a348be78386668407fe0cca.js"
 );
 
 self.addEventListener('message', (event) => {
