@@ -65,11 +65,16 @@ let EntityInfo = props => {
     />
   );
 
+  let entityName = null;
+  if (!entityIsPlayer) {
+    entityName = <h1>{props.type[0].toUpperCase() + props.type.slice(1)}</h1>;
+  }
+
   return (
     <div className={"info " + props.group}>
       <img className="icon" src={icon} />
+      {entityName}
       {bars}
-
       <h2>Atk:{props.entity.atk}</h2>
       <h2>Def:{props.entity.def}</h2>
     </div>
