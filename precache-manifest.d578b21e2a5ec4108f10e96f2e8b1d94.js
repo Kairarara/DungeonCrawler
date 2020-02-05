@@ -1,11 +1,11 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "2648d84b7a998605cc77a777febe0781",
+    "revision": "cbcf5eb4722f9c8fc1dc7bfa5a4e3e9f",
     "url": "/DungeonCrawler/index.html"
   },
   {
-    "revision": "baf895eb661efca659e8",
-    "url": "/DungeonCrawler/static/css/main.af9d1b43.chunk.css"
+    "revision": "42ba785e3cf326a51dd6",
+    "url": "/DungeonCrawler/static/css/main.4190bbc2.chunk.css"
   },
   {
     "revision": "c915b9eef857f7dec61b",
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/DungeonCrawler/static/js/2.2068d131.chunk.js.LICENSE"
   },
   {
-    "revision": "baf895eb661efca659e8",
-    "url": "/DungeonCrawler/static/js/main.a5b9a094.chunk.js"
+    "revision": "42ba785e3cf326a51dd6",
+    "url": "/DungeonCrawler/static/js/main.20e5f327.chunk.js"
   },
   {
     "revision": "54b62538076c04aceb8a",
