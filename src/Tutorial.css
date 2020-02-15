@@ -1,0 +1,53 @@
+.Tutorial{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-right:20px;
+  animation: hiding 3s 10s 1 forwards;
+  -webkit-animation: hiding 3s 10s 1 forwards;
+}
+
+.Tutorial div{
+  display: flex;
+  align-items: center;
+  margin:15px;
+}
+
+.imgContainer{
+  height:80px;
+  width:150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imgContainer img{
+  height:100%;
+}
+
+.Tutorial p{
+  font-size: 20px;
+  width:250px;
+}
+
+@keyframes hiding{
+  0%{
+    opacity: 1;
+  }
+
+  100%{
+    opacity: 0;
+    transform: translate(0px, 100%);
+  }
+}
+@-webkit-keyframes hiding{
+  0%{
+    opacity: 1;
+  }
+
+  100%{
+    opacity: 0;
+    transform: translate(0px, 100%);
+  }
+}

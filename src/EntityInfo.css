@@ -6,6 +6,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0px 0px 5px black;
+  border-color: #825d03;
+  border-style: solid;
 }
 
 .icon {
@@ -28,12 +31,14 @@
 }
 
 .bar {
+  border-color: #825d03;
+  border-style: solid;
   margin-bottom: 5%;
-  height: 8%;
+  height: 7%;
   width: 90%;
   position: relative;
   background: #555;
-  padding: 1%;
+  padding: 0%;
   box-shadow: inset 0 -5px 5px rgba(255, 255, 255, 0.3);
   position: relative;
   display: flex;

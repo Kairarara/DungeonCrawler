@@ -19,13 +19,15 @@ body {
   width: 100%;
 }
 
-.app {
+.App {
   height: 100%;
   width: 100%;
   padding: auto;
   display: flex;
   justify-content: center;
-  align-content: center;
+  align-items: flex-end;
+  flex-direction: column;
   color: white;
   font-family: sans-serif, Helvetica, arial;
+  overflow: hidden;
 }

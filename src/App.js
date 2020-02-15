@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import Map from "./Map";
 import ShownEntities from "./EntityInfo";
 import EndScreen from "./EndScreen";
+import Tutorial from "./Tutorial";
 import { connect } from "react-redux";
 
 /*TODO:
@@ -617,10 +618,11 @@ const store = createStore(reducer);
 
 const App = () => (
   <Provider store={store}>
-    <div className="app">
+    <div className="App">
       <EndScreen />
       <ShownEntities />
       <Map />
+      <Tutorial/>
     </div>
   </Provider>
 );
