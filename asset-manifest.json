@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/DungeonCrawler/static/css/main.925d204f.chunk.css",
-    "main.js": "/DungeonCrawler/static/js/main.e0b29b19.chunk.js",
-    "main.js.map": "/DungeonCrawler/static/js/main.e0b29b19.chunk.js.map",
+    "main.js": "/DungeonCrawler/static/js/main.19e55149.chunk.js",
+    "main.js.map": "/DungeonCrawler/static/js/main.19e55149.chunk.js.map",
     "runtime-main.js": "/DungeonCrawler/static/js/runtime-main.b6aa1cb1.js",
     "runtime-main.js.map": "/DungeonCrawler/static/js/runtime-main.b6aa1cb1.js.map",
-    "static/js/2.9c49961d.chunk.js": "/DungeonCrawler/static/js/2.9c49961d.chunk.js",
-    "static/js/2.9c49961d.chunk.js.map": "/DungeonCrawler/static/js/2.9c49961d.chunk.js.map",
+    "static/js/2.5bf88946.chunk.js": "/DungeonCrawler/static/js/2.5bf88946.chunk.js",
+    "static/js/2.5bf88946.chunk.js.map": "/DungeonCrawler/static/js/2.5bf88946.chunk.js.map",
     "index.html": "/DungeonCrawler/index.html",
-    "precache-manifest.acf81edb131076a4a95a5a932c7ea4e9.js": "/DungeonCrawler/precache-manifest.acf81edb131076a4a95a5a932c7ea4e9.js",
+    "precache-manifest.7bffb494413b0f5684f3f088fc5424c0.js": "/DungeonCrawler/precache-manifest.7bffb494413b0f5684f3f088fc5424c0.js",
     "service-worker.js": "/DungeonCrawler/service-worker.js",
     "static/css/main.925d204f.chunk.css.map": "/DungeonCrawler/static/css/main.925d204f.chunk.css.map",
-    "static/js/2.9c49961d.chunk.js.LICENSE": "/DungeonCrawler/static/js/2.9c49961d.chunk.js.LICENSE"
+    "static/js/2.5bf88946.chunk.js.LICENSE": "/DungeonCrawler/static/js/2.5bf88946.chunk.js.LICENSE"
   },
   "entrypoints": [
     "static/js/runtime-main.b6aa1cb1.js",
-    "static/js/2.9c49961d.chunk.js",
+    "static/js/2.5bf88946.chunk.js",
     "static/css/main.925d204f.chunk.css",
-    "static/js/main.e0b29b19.chunk.js"
+    "static/js/main.19e55149.chunk.js"
   ]
 }
