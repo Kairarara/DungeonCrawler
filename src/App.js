@@ -6,7 +6,6 @@ import Map from "./Map";
 import ShownEntities from "./EntityInfo";
 import EndScreen from "./EndScreen";
 import Tutorial from "./Tutorial";
-import { connect } from "react-redux";
 
 /*TODO:
   
@@ -42,12 +41,15 @@ let pathFinder = (land, start, end, maxDistance) => {
           x++;
           break;
         }
+        default: {
+          throw new Error(`Unexpected command stored on path[${path.length - 1}] in getPath functon`)
+        }
       }
       i++;
       path.push(map[y][x].prev);
     }
     if (i > maxDistance) {
-      throw "Path is longer than max distance";
+      throw new Error("Path is longer than max distance");
     }
     return path;
   };
@@ -128,7 +130,7 @@ class Terrain {
         this.canMoveThrough = false;
         break;
       default:
-        throw type + " is not a valid terrain type";
+        throw new Error(type + " is not a valid terrain type");
     }
   }
 }
@@ -202,6 +204,11 @@ let generateMap = (landType = "valley", mapH = 20, mapW = 20, enemyNumbers) => {
     }
   };
 
+  for(let enemy of enemyNumbers){
+    let img= new Image();
+    img.src = `Portraits/${enemy.type}.gif`;
+  }
+
   let map = new Object();
 
   switch (landType) {
@@ -210,7 +217,7 @@ let generateMap = (landType = "valley", mapH = 20, mapW = 20, enemyNumbers) => {
       break;
     }
     default: {
-      throw landType + " is not a valid land type";
+      throw new Error(landType + " is not a valid land type");
     }
   }
 
@@ -232,7 +239,7 @@ let generateMap = (landType = "valley", mapH = 20, mapW = 20, enemyNumbers) => {
         } else {
           if (recursiveCounter < 100)
             return generateCoords(recursiveCounter + 1);
-          else throw "could not generate coordinates";
+          else throw new Error("could not generate coordinates");
         }
       };
 
@@ -354,7 +361,7 @@ const initializeState = (mapW = 30, mapH = 30) => {
         return coords;
       } else {
         if (recursiveCounter < 50) return generateCoords(recursiveCounter + 1);
-        else throw "could not generate coordinates";
+        else throw new Error("could not generate coordinates");
       }
     };
 
@@ -441,7 +448,6 @@ function reducer(state = initializeState(), action) {
       let dmg2 = enemy.atk - entity.def;
       if (dmg2 < 0) dmg2 = 0;
 
-      let result;
       while (health > 0) {
         enemyHealth -= dmg1;
         if (enemyHealth > 0) {
@@ -610,8 +616,6 @@ function reducer(state = initializeState(), action) {
     default:
       return state;
   }
-
-  return state;
 }
 
 const store = createStore(reducer);

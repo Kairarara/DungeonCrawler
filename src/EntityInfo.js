@@ -53,9 +53,6 @@ let EntityInfo = props => {
     ); //exp needed for lvl up is level*100
   }
 
-  let relativeHealth = Math.floor(
-    (props.entity.health / props.entity.maxHealth) * 100
-  );
   bars.push(
     <Bar
       value={props.entity.health}
@@ -72,7 +69,7 @@ let EntityInfo = props => {
 
   return (
     <div className={"info " + props.group}>
-      <img className="icon" src={icon} />
+      <img className="icon" src={icon} alt={entityName+" portrait"} />
       {entityName}
       {bars}
       <h2>Atk:{props.entity.atk}</h2>

@@ -8,19 +8,12 @@ let mapStateToProps = state => {
   };
 };
 
-class EndScreen extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-
+let EndScreen =(props) => {
     return (
-      <div className="EndScreen" style={(this.props.gameState!=="playing")?{"z-index":"100","opacity":"1"}:{"z-index":"-1","opacity":"0"}}>
-        <h1>{this.props.gameState}</h1>
+      <div className="EndScreen" style={(props.gameState!=="playing")?{"z-index":"100","opacity":"1"}:{"z-index":"-1","opacity":"0"}}>
+        <h1>{props.gameState}</h1>
       </div>
     );
-  }
 }
 
 export default connect(mapStateToProps)(EndScreen);
