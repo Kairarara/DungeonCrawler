@@ -1,5 +1,5 @@
 import React from "react";
-import "./EntityInfo.css";
+import "./css/EntityInfo.css";
 import { connect } from "react-redux";
 
 let mapStateToProps = state => {

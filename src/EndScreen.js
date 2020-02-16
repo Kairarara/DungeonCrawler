@@ -1,5 +1,5 @@
 import React from "react";
-import "./EndScreen.css";
+import "./css/EndScreen.css";
 import { connect } from "react-redux";
 
 let mapStateToProps = state => {

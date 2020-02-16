@@ -1,5 +1,5 @@
 import React from "react";
-import "./Map.css";
+import "./css/Map.css";
 import { connect } from "react-redux";
 
 let mapStateToProps = state => {
